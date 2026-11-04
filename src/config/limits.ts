@@ -12,3 +12,6 @@ export const MISSION_LIMITS = {
   maxGpsProjectionDistance: 1000,
   maxParallelCommands:4, parallelMinDuration:0.5, trajectoryMaxLag:1, trajectoryMaxHeadingLag:20,
 } as const;
+
+/** Physical scene capacity; JSON/AI mission limits remain in LIMITS. */
+export const SCENE_LIMITS = { maxRadius: 60, maxAltitude: 50 } as const;

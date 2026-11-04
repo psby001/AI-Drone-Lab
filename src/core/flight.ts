@@ -1,6 +1,6 @@
 import { bodyToWorld, degrees, normalizeHeading, radians, type Vec3 } from './coordinates';
 import { dragAcceleration, PHYSICS, WIND_PRESETS, windTarget, type EnvironmentSettings, type WindPreset } from './environment';
-import { LIMITS } from '../config/limits';
+import { LIMITS, SCENE_LIMITS } from '../config/limits';
 export { LIMITS } from '../config/limits';
 export type FlightMode = 'grounded' | 'armed' | 'flying' | 'landing';
 export type ControlMode = 'position' | 'attitude';
@@ -23,6 +23,13 @@ const approach = (a: number, b: number, step: number) => a + clamp(b - a, -step,
  * mode, tilt in attitude mode. Independent of keyboard, renderer or AI. */
 export class FlightModel {
   state = initialState();
+  flightBounds={radius:Number(LIMITS.radius),maxAltitude:Number(LIMITS.maxAltitude)};
+  setFlightBounds(bounds={radius:Number(LIMITS.radius),maxAltitude:Number(LIMITS.maxAltitude)}){
+    if(!Number.isFinite(bounds.radius)||bounds.radius<=0||bounds.radius>SCENE_LIMITS.maxRadius||!Number.isFinite(bounds.maxAltitude)||bounds.maxAltitude<.5||bounds.maxAltitude>SCENE_LIMITS.maxAltitude)throw new Error('場景邊界超出全域安全限制');
+    this.flightBounds={...bounds};
+  }
+  containsPosition(p:Vec3){return Math.hypot(p.east,p.north)<=this.flightBounds.radius+1e-8&&p.up>=0&&p.up<=this.flightBounds.maxAltitude+1e-8;}
+
   environment: EnvironmentSettings;
   private accumulator = 0;
   private time = 0;
@@ -42,7 +49,7 @@ export class FlightModel {
     this.state = initialState(); this.accumulator = 0; this.time = 0;
     if(spawn){
       const p=spawn.position;
-      if(![p.east,p.north,p.up,spawn.heading].every(Number.isFinite)||p.up!==0||Math.hypot(p.east,p.north)>LIMITS.radius)throw new Error('無效的地面出生點');
+      if(![p.east,p.north,p.up,spawn.heading].every(Number.isFinite)||p.up!==0||Math.hypot(p.east,p.north)>this.flightBounds.radius)throw new Error('無效的地面出生點');
       this.state.position={...p};this.state.heading=normalizeHeading(spawn.heading);
     }
     this.hold = zero(); this.integral = zero(); this.wasMoving = false; this.wasVertical = false; this.braking = false;
@@ -134,7 +141,7 @@ export class FlightModel {
     const verticalInput = manual ? safe(input.vertical) : 0;
     const verticalMoving = Math.abs(verticalInput) > 0.001;
     if (verticalMoving) this.hold.up = s.position.up;
-    else if (this.wasVertical) this.hold.up = clamp(s.position.up + s.velocity.up / 3, 0, LIMITS.maxAltitude);
+    else if (this.wasVertical) this.hold.up = clamp(s.position.up + s.velocity.up / 3, 0, this.flightBounds.maxAltitude);
     this.wasVertical = verticalMoving;
     let desiredUp = verticalMoving ? verticalInput * LIMITS.verticalSpeed : clamp((this.hold.up - s.position.up) * 1.8, -2, 2);
     if (s.mode === 'landing') desiredUp = -Math.min(1.2, Math.max(0.25, s.position.up * 1.5));
@@ -166,11 +173,11 @@ export class FlightModel {
     s.heading = normalizeHeading(s.heading + s.yawRate * dt);
     for (const axis of ['east', 'north', 'up'] as const) s.position[axis] += s.velocity[axis] * dt;
     const radialDistance = Math.hypot(s.position.east, s.position.north);
-    if (radialDistance > LIMITS.radius) {
-      s.position.east *= LIMITS.radius / radialDistance; s.position.north *= LIMITS.radius / radialDistance;
+    if (radialDistance > this.flightBounds.radius) {
+      s.position.east *= this.flightBounds.radius / radialDistance; s.position.north *= this.flightBounds.radius / radialDistance;
       s.velocity.east = 0; s.velocity.north = 0; this.integral.east = 0; this.integral.north = 0; s.boundary = true;
     }
-    if (s.position.up >= LIMITS.maxAltitude) { s.position.up = LIMITS.maxAltitude; s.velocity.up = Math.min(0, s.velocity.up); s.boundary = true; }
+    if (s.position.up >= this.flightBounds.maxAltitude) { s.position.up = this.flightBounds.maxAltitude; s.velocity.up = Math.min(0, s.velocity.up); s.boundary = true; }
     if (s.position.up <= 0) { s.position.up = 0; s.velocity = zero(); s.acceleration = zero(); s.attitude = { pitch: 0, roll: 0 }; s.yawRate = 0; s.thrust = PHYSICS.mass * PHYSICS.gravity * 0.08; s.mode = 'armed'; this.integral = zero(); this.hold = { ...s.position }; this.wasMoving = false; this.wasVertical = false; this.braking = false; }
     s.airspeed = Math.hypot(s.velocity.east - s.wind.east, s.velocity.north - s.wind.north, s.velocity.up - s.wind.up);
   }

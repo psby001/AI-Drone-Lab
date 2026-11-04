@@ -106,3 +106,25 @@
 .python-run-guide ol { padding-left: 22px; }
 .python-run-guide li { margin-bottom: 10px; }
 .python-run-guide pre { padding: 10px; background: #edf1eb; border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.scene-selector-backdrop { position: fixed; inset: 0; z-index: 120; background: #20353e88; display: grid; place-items: center; padding: max(12px, env(safe-area-inset-top)) 12px; }
+.scene-selector { background: #f5f6ed; border-radius: 14px; width: min(800px, 100%); max-height: 90dvh; overflow-y: auto; padding: 18px; box-sizing: border-box; box-shadow: 0 12px 60px #152e3c55; }
+.scene-selector .picker-title { position: sticky; top: -18px; background: #f5f6ed; z-index: 1; }
+.scene-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 14px 0; }
+.scene-cards button { text-align: left; white-space: normal; padding: 10px; display: flex; flex-direction: column; gap: 7px; border: 2px solid transparent; min-width: 0; }
+.scene-cards button.selected { border-color: #397d68; background: #e1ece1; }
+.scene-cards img { width: 100%; max-height: 140px; object-fit: cover; border-radius: 5px; }
+.scene-selector button { min-height: 44px; }
+.scene-cards small, .scene-cards span { font-size: 12px; line-height: 1.5; }
+@media (max-width: 480px) { .scene-cards { gap: 8px; } .scene-cards img { max-height: 82px; } .scene-selector { padding: 12px; } }
+@media (max-height: 500px) and (orientation: landscape) { .scene-cards { grid-template-columns: repeat(4, minmax(0,1fr)); } .scene-cards img { max-height: 70px; } }
+
+.desktop-previews { position: fixed; left: 28px; bottom: 16px; width: min(520px, calc(100vw - 440px)); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; z-index: 3; pointer-events: none; }
+.desktop-previews figure { margin: 0; overflow: hidden; border: 1px solid #9eb3a6; border-radius: 9px; background: #eff4eaeF; box-shadow: 0 3px 12px #183b3726; }
+.desktop-previews figcaption { padding: 6px 9px; font-size: 11px; color: #315b50; }
+.desktop-previews canvas { width: 100%; aspect-ratio: 16 / 9; display: block; }
+@media (max-width: 700px), (max-height: 600px) and (max-width: 1100px) { .desktop-previews { display: none; } }
+
+.desktop-preview-switches { grid-column: 1 / -1; display: flex; gap: 8px; pointer-events: auto; }
+.desktop-preview-switches button { min-height: 34px; padding: 6px 10px; font-size: 11px; background: #f2f6ed; box-shadow: 0 2px 6px #183b3726; }
+.desktop-preview-switches button[aria-pressed="true"] { background: #315b50; color: white; }

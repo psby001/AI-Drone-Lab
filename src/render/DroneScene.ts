@@ -1,3 +1,6 @@
+import { OverheadPreview } from './OverheadPreview';
+import { FreeSceneManager,type FreeSceneDefinition } from '../scenes/FreeFlightScenes';
+import { createFreeSceneCatalog } from '../scenes/catalog';
 import * as THREE from 'three';
 import { radians, toScene } from '../core/coordinates';
 import { LIMITS, type FlightState } from '../core/flight';
@@ -21,10 +24,16 @@ const WHEELBASE = 0.9;
 const DRONE_SCALE = WHEELBASE / (2 * Math.SQRT2 * MOTOR_OFFSET);
 
 export class DroneScene {
+  readonly freeScenes:FreeSceneManager;
+  private freeRoot=new THREE.Group();
+  private activeFreeRoot:THREE.Group|null=null;
+  private challengeVisible=false;
+  private restoreFreeTruth(){this.internalGroundTruth.activateScene(this.freeScenes?.getActiveScene()?.id??'free-flight',this.activeFreeRoot??this.baseEnvironment);}
   private photoConsumers=new Set<InternalPhotoConsumer>();
   /** Internal sensor hook: capture-time tokens stay paired through asynchronous PNG encoding. */
   subscribeAnnotatedPhotos(consumer:InternalPhotoConsumer){this.photoConsumers.add(consumer);return()=>{this.photoConsumers.delete(consumer);};}
   readonly payloadCamera:DroneCamera;
+  readonly overheadPreview:OverheadPreview;
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private baseEnvironment=new THREE.Group();
@@ -44,8 +53,8 @@ export class DroneScene {
   private rotors: THREE.Mesh[] = [];
   private observer: ResizeObserver;
   private shadow: THREE.Mesh;
-  constructor(private host: HTMLElement, private tick: (dt: number) => FlightState, private onError: (message: string) => void,cameraController=new CameraController(),private simulationClock?:()=>number) {
-    for(const category of DEFAULT_TARGET_CLASSES)this.targetRegistry.registerClass(category);
+  constructor(private host: HTMLElement, private tick: (dt: number) => FlightState, private onError: (message: string) => void,cameraController=new CameraController(),private simulationClock?:()=>number,freeHooks?:{before:()=>void;initialize:(d:FreeSceneDefinition)=>void}) {
+    for(const category of [...DEFAULT_TARGET_CLASSES,{class_id:5,class_name:'tree'}])this.targetRegistry.registerClass(category);
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -103,6 +112,7 @@ export class DroneScene {
     this.drone.scale.setScalar(DRONE_SCALE);
     this.scene.add(this.drone);
     this.camera.layers.enable(1);
+    this.overheadPreview=new OverheadPreview(this.renderer,this.scene);
     this.payloadCamera=new DroneCamera(cameraController,this.renderer,this.scene,this.airframe);
     this.internalGroundTruth.activateScene('free-flight',this.baseEnvironment);
     this.payloadCamera.setPhotoObserver({prepare:(id,state)=>({snapshot:this.internalGroundTruth.preparePhoto(id,state),consumers:[...this.photoConsumers].map(consumer=>({consumer,token:consumer.prepare()}))}),commit:(_id,prepared,image)=>{const p=prepared as {snapshot:PreparedSnapshot;consumers:Array<{consumer:InternalPhotoConsumer;token:unknown}>};this.internalGroundTruth.commitPhoto(p.snapshot,image);const snapshot={...p.snapshot,image_data:image};for(const entry of p.consumers){if(this.photoConsumers.has(entry.consumer))try{entry.consumer.captured(structuredClone(snapshot),entry.token);}catch{/* Sensor consumers cannot break photos or flight. */}}},remove:id=>this.internalGroundTruth.removePhoto(id)});
@@ -113,6 +123,11 @@ export class DroneScene {
     this.windLines.frustumCulled = false; this.scene.add(this.windLines);
     this.shadow = new THREE.Mesh(new THREE.CircleGeometry(0.9*DRONE_SCALE,24), new THREE.MeshBasicMaterial({color:0x243c38,transparent:true,opacity:0.18,depthWrite:false})); this.shadow.rotation.x=-Math.PI/2; this.shadow.position.y=0.105; this.scene.add(this.shadow);
     this.camera.position.set(7,6,10);
+    this.freeRoot.add(this.baseEnvironment);this.scene.add(this.freeRoot);
+    const catalog=createFreeSceneCatalog();
+    const provider=new ThreeChallengeSceneProvider(this.scene,this.baseEnvironment,catalog.factories,{loaded:(d,group)=>{this.activeFreeRoot=group;const cleanup=this.internalGroundTruth.activateScene(d.id,group);return()=>{cleanup();if(this.activeFreeRoot===group)this.activeFreeRoot=null;};}},this.freeRoot);
+    this.freeScenes=new FreeSceneManager(catalog,provider,{before:()=>{if(this.challengeVisible)throw new Error('請先離開挑戰關卡');this.clearGroundTruthTestScene();freeHooks?.before();},initialize:d=>{this.cameraRig.reset(d.initial_camera_pose);freeHooks?.initialize(d);}});
+
     this.observer = new ResizeObserver(() => { const w=host.clientWidth,h=host.clientHeight; this.renderer.setSize(w,h); this.camera.aspect=w/Math.max(h,1); this.camera.updateProjectionMatrix(); }); this.observer.observe(host);
     let previous = 0;
     this.renderer.setAnimationLoop((time) => {
@@ -139,24 +154,25 @@ export class DroneScene {
       this.elapsed+=dt;
       this.payloadCamera.update({position:{...state.position},heading:state.heading,attitude:{pitch:state.attitude.pitch,roll:state.attitude.roll}},time,this.simulationClock?.()??this.elapsed);
       this.debugView.update();
+      this.overheadPreview.update(p,time);
       this.renderer.render(this.scene,this.camera);
     });
   }
   setCameraMode(mode: CameraMode) { this.cameraRig.setMode(mode); }
-  createChallengeSceneProvider(factories:PluginRegistry<SceneFactory>){this.challengeProvider?.dispose();this.challengeProvider=new ThreeChallengeSceneProvider(this.scene,this.baseEnvironment,factories,{loaded:(d,group)=>{const remove=this.internalGroundTruth.activateScene(d.id,group);return()=>{remove();this.internalGroundTruth.activateScene('free-flight',this.baseEnvironment);};}});return{load:async(d:import('../challenges/types').ChallengeDefinition,signal:AbortSignal)=>{const generation=++this.sceneGeneration;this.clearGroundTruthTestScene();try{return await this.challengeProvider!.load(d,signal);}catch(error){if(generation===this.sceneGeneration)this.internalGroundTruth.activateScene('free-flight',this.baseEnvironment);throw error;}}};}
+  createChallengeSceneProvider(factories:PluginRegistry<SceneFactory>){this.challengeProvider?.dispose();this.challengeProvider=new ThreeChallengeSceneProvider(this.scene,this.freeRoot,factories,{loaded:(d,group)=>{this.challengeVisible=true;const remove=this.internalGroundTruth.activateScene(d.id,group);return()=>{remove();this.challengeVisible=false;this.restoreFreeTruth();};}});return{load:async(d:import('../challenges/types').ChallengeDefinition,signal:AbortSignal)=>{const generation=++this.sceneGeneration;this.clearGroundTruthTestScene();this.challengeVisible=true;try{return await this.challengeProvider!.load(d,signal);}catch(error){if(generation===this.sceneGeneration){this.challengeVisible=false;this.restoreFreeTruth();}throw error;}}};}
   setGroundTruthDebug(enabled:boolean){this.debugView.setEnabled(enabled);}
   async captureAnnotatedPhoto(){const id=await this.payloadCamera.capturePhoto();const snapshot=this.internalGroundTruth.getPhotoSnapshot(id);if(!snapshot)throw new Error('照片已保留，但未產生標註');this.debugView.setAnnotations(snapshot.object_annotations);return snapshot;}
   loadGroundTruthTestScene(){
-    this.sceneGeneration++;if(this.internalGroundTruth.sceneId!=='free-flight'&&!this.testSceneCleanup)throw new Error('請先離開關卡');this.clearGroundTruthTestScene();
-    const group=createGroundTruthTestScene(),background=this.scene.background,fog=this.scene.fog;this.scene.add(group);this.baseEnvironment.visible=false;this.scene.background=new THREE.Color('#c1d4df');this.scene.fog=new THREE.Fog('#c1d4df',48,115);
-    const remove=this.internalGroundTruth.activateScene('ground-truth-test',group);this.testSceneCleanup=()=>{remove();disposeSceneGroup(group);this.baseEnvironment.visible=true;this.scene.background=background;this.scene.fog=fog;this.internalGroundTruth.activateScene('free-flight',this.baseEnvironment);};
+    this.sceneGeneration++;if(this.challengeVisible)throw new Error('請先離開關卡');this.clearGroundTruthTestScene();
+    const group=createGroundTruthTestScene(),background=this.scene.background,fog=this.scene.fog;this.scene.add(group);this.freeRoot.visible=false;this.scene.background=new THREE.Color('#c1d4df');this.scene.fog=new THREE.Fog('#c1d4df',48,115);
+    const remove=this.internalGroundTruth.activateScene('ground-truth-test',group);this.testSceneCleanup=()=>{remove();disposeSceneGroup(group);this.freeRoot.visible=true;this.scene.background=background;this.scene.fog=fog;this.restoreFreeTruth();};
   }
   clearGroundTruthTestScene(){this.testSceneCleanup?.();this.testSceneCleanup=null;}
   private contextLost = (event: Event) => { event.preventDefault(); this.renderer.setAnimationLoop(null);void this.payloadCamera.stopRecording().catch(()=>{}); this.onError('3D 繪圖連線中斷，請重新載入頁面。'); };
   dispose() {
     this.clearGroundTruthTestScene();this.debugView.dispose();
-    this.challengeProvider?.dispose();
-    this.payloadCamera.dispose();
+    this.challengeProvider?.dispose();this.freeScenes.dispose();
+    this.overheadPreview.dispose();this.payloadCamera.dispose();
     this.photoConsumers.clear();
     this.internalGroundTruth.dispose();
     this.renderer.setAnimationLoop(null); this.observer.disconnect();

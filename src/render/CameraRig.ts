@@ -8,6 +8,8 @@ export const FIXED_CAMERA_POSITION: Readonly<Vec3> = Object.freeze({ east: 0, no
 
 export class CameraRig {
   mode: CameraMode = 'follow';
+  private fixed={...FIXED_CAMERA_POSITION};
+  reset(position:Vec3){this.fixed={...position};this.camera.position.set(...toScene(position));this.look.set(0,0,0);}
   private look = new THREE.Vector3();
   constructor(private camera: THREE.PerspectiveCamera) {}
   setMode(mode: CameraMode) { this.mode = mode; }
@@ -16,7 +18,7 @@ export class CameraRig {
     const position = new THREE.Vector3(...toScene(state.position));
     const aim = position.clone().add(new THREE.Vector3(0, 0.5, 0));
     if (this.mode === 'fixed') {
-      this.camera.position.set(...toScene(FIXED_CAMERA_POSITION));
+      this.camera.position.set(...toScene(this.fixed));
       this.look.copy(aim);
     } else {
       const heading = radians(state.heading);

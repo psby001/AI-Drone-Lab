@@ -3,7 +3,7 @@ import { toScene } from '../core/coordinates';
 import type { FlightState } from '../core/flight';
 import { PluginRegistry } from './registry';
 import type { ChallengeDefinition,ChallengeEvent,ChallengeSceneHandle,ChallengeSceneProvider,SceneObject } from './types';
-export interface SceneFactory {schema:object;validateDefinition?(definition:ChallengeDefinition):void;create(definition:ChallengeDefinition):THREE.Group;colliders?(definition:ChallengeDefinition):SceneObject[];update?(group:THREE.Group,snapshot:import('./types').ChallengeSnapshot):void}
+export interface SceneFactory {schema:object;validateDefinition?(definition:ChallengeDefinition):void;create(definition:ChallengeDefinition):THREE.Group;load?(definition:ChallengeDefinition,signal:AbortSignal):Promise<THREE.Group>;colliders?(definition:ChallengeDefinition):SceneObject[];update?(group:THREE.Group,snapshot:import('./types').ChallengeSnapshot):void}
 export function seededRandom(seed:number){return()=>{seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^(seed>>>15),1|seed);t^=t+Math.imul(t^(t>>>7),61|t);return((t^(t>>>14))>>>0)/4294967296;};}
 function addMesh(group:THREE.Group,geometry:THREE.BufferGeometry,color:string,position:[number,number,number],transparent=false){const mesh=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color,roughness:.9,transparent,opacity:transparent?.22:1,depthWrite:!transparent}));mesh.position.set(...position);group.add(mesh);return mesh;}
 export function buildScene(d:ChallengeDefinition,garden:boolean){
@@ -22,7 +22,7 @@ export function buildScene(d:ChallengeDefinition,garden:boolean){
   return group;
 }
 export function createSceneRegistry(){const schema={type:'object',additionalProperties:false,required:['ground','sky'],properties:{ground:{type:'string',pattern:'^#[0-9a-fA-F]{6}$'},sky:{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}}};return new PluginRegistry<SceneFactory>().register('training-ground',{schema,create:d=>buildScene(d,false)}).register('marker-garden',{schema,create:d=>buildScene(d,true)});}
-export function disposeSceneGroup(group:THREE.Group){const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>(),textures=new Set<THREE.Texture>();group.traverse(o=>{if(o instanceof THREE.InstancedMesh)o.dispose();if(o instanceof THREE.Mesh||o instanceof THREE.Line||o instanceof THREE.LineSegments){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material]){materials.add(m);for(const value of Object.values(m))if(value instanceof THREE.Texture)textures.add(value);}}});group.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());group.clear();}
+export function disposeSceneGroup(group:THREE.Group){const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>(),textures=new Set<THREE.Texture>();group.traverse(o=>{if(o instanceof THREE.InstancedMesh)o.dispose();if(o instanceof THREE.Mesh||o instanceof THREE.Line||o instanceof THREE.LineSegments||o instanceof THREE.Sprite){if(!(o instanceof THREE.Sprite))geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material]){materials.add(m);for(const value of Object.values(m))if(value instanceof THREE.Texture)textures.add(value);}}});group.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());group.clear();}
 /** Swept sphere/AABB detection prevents tunneling; emits on contact entry, not every frame. */
 export function collisionSampler(objects:SceneObject[]){let contacts=new Set<string>();return(current:FlightState,previous:FlightState|null):ChallengeEvent[]=>{
   const next=new Set<string>(),events:ChallengeEvent[]=[];
@@ -36,18 +36,19 @@ export function collisionSampler(objects:SceneObject[]){let contacts=new Set<str
 /** Owns only challenge objects and backdrop. Drone, lights and both cameras are shared. */
 export class ThreeChallengeSceneProvider implements ChallengeSceneProvider {
   private active:ChallengeSceneHandle|null=null;
-  constructor(private scene:THREE.Scene,private base:THREE.Group,private factories:PluginRegistry<SceneFactory>,private lifecycle?:{loaded(definition:ChallengeDefinition,group:THREE.Group):()=>void}){}
+  private generation=0;
+  constructor(private scene:THREE.Scene,private base:THREE.Group,private factories:PluginRegistry<SceneFactory>,private lifecycle?:{loaded(definition:ChallengeDefinition,group:THREE.Group):()=>void},private container:THREE.Object3D=scene){}
   async load(d:ChallengeDefinition,signal:AbortSignal):Promise<ChallengeSceneHandle>{
-    if(signal.aborted)throw new Error('場景載入已取消');this.active?.dispose();
-    const factory=this.factories.get(d.scene.type),group=factory.create(d),background=this.scene.background,fog=this.scene.fog;
-    if(signal.aborted){disposeSceneGroup(group);throw new Error('場景載入已取消');}
+    if(signal.aborted)throw new Error('場景載入已取消');const generation=++this.generation;this.active?.dispose();
+    const factory=this.factories.get(d.scene.type),group=factory.load?await factory.load(d,signal):factory.create(d),background=this.scene.background,fog=this.scene.fog;
+    if(signal.aborted||generation!==this.generation){disposeSceneGroup(group);throw new Error('場景載入已取消');}
     this.base.visible=false;
     if(typeof d.scene.params.sky==='string'){this.scene.background=new THREE.Color(d.scene.params.sky);this.scene.fog=new THREE.Fog(d.scene.params.sky,48,115);}
-    this.scene.add(group);
+    this.container.add(group);
     let cleanup=()=>{};
     let disposed=false;const handle:ChallengeSceneHandle={sample:collisionSampler([...d.scene.objects,...(factory.colliders?.(d)??[])]),update:s=>{if(!disposed)factory.update?.(group,s);},dispose:()=>{if(disposed)return;disposed=true;cleanup();disposeSceneGroup(group);this.base.visible=true;this.scene.background=background;this.scene.fog=fog;if(this.active===handle)this.active=null;}};
     try{cleanup=this.lifecycle?.loaded(d,group)??cleanup;}catch(error){handle.dispose();throw error;}
     this.active=handle;return handle;
   }
-  dispose(){this.active?.dispose();}
+  dispose(){this.generation++;this.active?.dispose();}
 }

@@ -3,7 +3,7 @@ import { radians, type Vec3 } from '../core/coordinates';
 import { MISSION_LIMITS as M } from '../config/limits';
 import type { MissionPlan, MissionSnapshot } from './types';
 import { validateMission } from './validate';
-import { parallelSample } from './parallel';
+import { parallelBounds,parallelSample } from './parallel';
 import { isCameraCommand,type MissionCameraPort } from '../camera/types';
 const clamp = (v: number, max: number) => Math.max(-max, Math.min(max, v));
 const angleDelta = (to: number, from: number) => ((to - from + 540) % 360) - 180;
@@ -43,6 +43,7 @@ export class MissionRunner {
     if (s.mode !== 'grounded' && s.mode !== 'armed') { this.snapshot.message = '開始前請先降落，或重置任務與飛機。'; return false; }
     const validated = validateMission(this.plan.mission, { ...s.position, heading: s.heading });
     if (!validated.plan) { this.snapshot.status = 'failed'; this.snapshot.message = validated.errors.join('\n'); return false; }
+    if(validated.plan.steps.some(step=>(step.trajectory?parallelBounds(step.trajectory,validated.plan!.origin):[step.target]).some(p=>!this.model.containsPosition(p)))){this.snapshot.status='failed';this.snapshot.message='任務路徑超出目前場景的飛行邊界或高度限制';return false;}
     this.cancelCamera();this.plan = validated.plan; this.accumulator = 0; this.previousHeading = s.heading; this.unwrappedHeading = s.heading;
     this.model.setControlMode('position'); this.model.arm(); this.resetStep();
     this.snapshot = { status: 'running', index: 0, elapsed: 0, message: '執行中（自動定位控制）', completed: [] };
@@ -150,9 +151,9 @@ export class MissionRunner {
     const s = this.model.state;
     // Boundary goals are tracked just inside the fence, within the declared
     // arrival tolerance, so controller lag cannot force a nominal 20m goal out.
-    const goal = { ...target, up: Math.min(target.up, LIMITS.maxAltitude - M.boundaryInset) };
+    const goal = { ...target, up: Math.min(target.up, this.model.flightBounds.maxAltitude - M.boundaryInset) };
     const radius = Math.hypot(goal.east, goal.north);
-    if(radius>LIMITS.radius-M.boundaryInset){goal.east*=(LIMITS.radius-M.boundaryInset)/radius;goal.north*=(LIMITS.radius-M.boundaryInset)/radius;}
+    if(radius>this.model.flightBounds.radius-M.boundaryInset){goal.east*=(this.model.flightBounds.radius-M.boundaryInset)/radius;goal.north*=(this.model.flightBounds.radius-M.boundaryInset)/radius;}
     const speeds=this.plan!.steps[this.snapshot.index].speeds;
     const horizontalLimit = speeds.horizontal;
     const verticalLimit = speeds.vertical;
