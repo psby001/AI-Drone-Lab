@@ -1,0 +1,736 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-drone-lab.local/mission-v1.2.schema.json",
+  "title": "AI Drone Lab Mission v1.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "commands"
+  ],
+  "properties": {
+    "version": {
+      "enum": [
+        "1.0",
+        "1.1",
+        "1.2"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "home": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      },
+      "required": [
+        "latitude",
+        "longitude"
+      ]
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 15,
+      "items": {
+        "$ref": "#/definitions/command"
+      }
+    }
+  },
+  "definitions": {
+    "parallelCommand": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "move_forward",
+                "move_backward",
+                "move_left",
+                "move_right"
+              ]
+            },
+            "distance": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "action",
+            "distance"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "ascend",
+                "descend"
+              ]
+            },
+            "distance": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 20
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 2
+            }
+          },
+          "required": [
+            "action",
+            "distance"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "change_altitude"
+            },
+            "altitude": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 20
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 2
+            }
+          },
+          "required": [
+            "action",
+            "altitude"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "turn_left",
+                "turn_right"
+              ]
+            },
+            "angle": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 360
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 90
+            }
+          },
+          "required": [
+            "action",
+            "angle"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "set_heading"
+            },
+            "heading": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMaximum": 360
+            },
+            "direction": {
+              "enum": [
+                "shortest",
+                "left",
+                "right"
+              ]
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 90
+            }
+          },
+          "required": [
+            "action",
+            "heading"
+          ]
+        }
+      ]
+    },
+    "command": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "set_camera_view"
+            },
+            "view": {
+              "enum": [
+                "fpv",
+                "nadir",
+                "oblique",
+                "custom"
+              ]
+            },
+            "mode": {
+              "enum": [
+                "body",
+                "stabilized"
+              ]
+            }
+          },
+          "required": [
+            "action",
+            "view"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "set_gimbal_pitch"
+            },
+            "angle": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 30
+            }
+          },
+          "required": [
+            "action",
+            "angle"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "set_gimbal_yaw"
+            },
+            "angle": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
+          },
+          "required": [
+            "action",
+            "angle"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "reset_gimbal",
+                "capture_photo",
+                "start_recording",
+                "stop_recording"
+              ]
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "parallel"
+            },
+            "reference_frame": {
+              "enum": [
+                "body",
+                "start"
+              ]
+            },
+            "commands": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 4,
+              "items": {
+                "$ref": "#/definitions/parallelCommand"
+              }
+            }
+          },
+          "required": [
+            "action",
+            "commands"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "takeoff"
+            },
+            "altitude": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 20
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 2
+            }
+          },
+          "required": [
+            "action",
+            "altitude"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "land"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "move_forward",
+                "move_backward",
+                "move_left",
+                "move_right"
+              ]
+            },
+            "distance": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "action",
+            "distance"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "ascend",
+                "descend"
+              ]
+            },
+            "distance": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 20
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 2
+            }
+          },
+          "required": [
+            "action",
+            "distance"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "turn_left",
+                "turn_right"
+              ]
+            },
+            "angle": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 360
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 90
+            }
+          },
+          "required": [
+            "action",
+            "angle"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "hover"
+            },
+            "duration": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 30
+            }
+          },
+          "required": [
+            "action",
+            "duration"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "set_speed"
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5
+            },
+            "vertical_speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 2
+            }
+          },
+          "required": [
+            "action",
+            "speed"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "change_altitude"
+            },
+            "altitude": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 20
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 2
+            }
+          },
+          "required": [
+            "action",
+            "altitude"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "set_heading"
+            },
+            "heading": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMaximum": 360
+            },
+            "direction": {
+              "enum": [
+                "shortest",
+                "left",
+                "right"
+              ]
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 90
+            }
+          },
+          "required": [
+            "action",
+            "heading"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "goto_local"
+            },
+            "x": {
+              "type": "number",
+              "minimum": -50,
+              "maximum": 50
+            },
+            "y": {
+              "type": "number",
+              "minimum": -50,
+              "maximum": 50
+            },
+            "z": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 20
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "action",
+            "x",
+            "y",
+            "z"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "goto_gps"
+            },
+            "latitude": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "longitude": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "altitude": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 20
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "action",
+            "latitude",
+            "longitude",
+            "altitude"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "follow_waypoints"
+            },
+            "frame": {
+              "const": "local"
+            },
+            "waypoints": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 10,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -50,
+                    "maximum": 50
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -50,
+                    "maximum": 50
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 20
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ]
+              }
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "action",
+            "frame",
+            "waypoints"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "follow_waypoints"
+            },
+            "frame": {
+              "const": "gps"
+            },
+            "waypoints": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 10,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "altitude": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 20
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude",
+                  "altitude"
+                ]
+              }
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "action",
+            "frame",
+            "waypoints"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "return_to_launch"
+            },
+            "altitude": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 20
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "repeat"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4
+            },
+            "commands": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 15,
+              "items": {
+                "$ref": "#/definitions/command"
+              }
+            }
+          },
+          "required": [
+            "action",
+            "count",
+            "commands"
+          ]
+        }
+      ]
+    }
+  }
+}

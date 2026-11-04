@@ -1,0 +1,32 @@
+{
+  "version": "1.1",
+  "name": "指定速度／高度／航向與返航",
+  "commands": [
+    {
+      "action": "set_speed",
+      "speed": 2,
+      "vertical_speed": 1
+    },
+    {
+      "action": "takeoff",
+      "altitude": 3
+    },
+    {
+      "action": "change_altitude",
+      "altitude": 4
+    },
+    {
+      "action": "set_heading",
+      "heading": 90
+    },
+    {
+      "action": "goto_local",
+      "x": 6,
+      "y": 3,
+      "z": 4
+    },
+    {
+      "action": "return_to_launch"
+    }
+  ]
+}

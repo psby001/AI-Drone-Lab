@@ -1,0 +1,49 @@
+{
+  "version": "1.2",
+  "name": "攝影尋寶：公開區域巡拍",
+  "commands": [
+    {
+      "action": "set_speed",
+      "speed": 4
+    },
+    {
+      "action": "takeoff",
+      "altitude": 6
+    },
+    {
+      "action": "set_camera_view",
+      "view": "nadir",
+      "mode": "stabilized"
+    },
+    {
+      "action": "goto_local",
+      "x": -16,
+      "y": 29,
+      "z": 6
+    },
+    {
+      "action": "capture_photo"
+    },
+    {
+      "action": "goto_local",
+      "x": 14,
+      "y": 40,
+      "z": 6
+    },
+    {
+      "action": "capture_photo"
+    },
+    {
+      "action": "goto_local",
+      "x": 17,
+      "y": 14,
+      "z": 9
+    },
+    {
+      "action": "capture_photo"
+    },
+    {
+      "action": "return_to_launch"
+    }
+  ]
+}

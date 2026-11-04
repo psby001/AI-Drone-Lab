@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "name": "正方形飛行",
+  "commands": [
+    {
+      "action": "takeoff",
+      "altitude": 5
+    },
+    {
+      "action": "repeat",
+      "count": 4,
+      "commands": [
+        {
+          "action": "move_forward",
+          "distance": 6
+        },
+        {
+          "action": "turn_right",
+          "angle": 90
+        }
+      ]
+    },
+    {
+      "action": "land"
+    }
+  ]
+}

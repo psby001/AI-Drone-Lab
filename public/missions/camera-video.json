@@ -1,0 +1,32 @@
+{
+  "version": "1.2",
+  "name": "錄影體驗",
+  "commands": [
+    {
+      "action": "takeoff",
+      "altitude": 4
+    },
+    {
+      "action": "set_camera_view",
+      "view": "oblique",
+      "mode": "body"
+    },
+    {
+      "action": "start_recording"
+    },
+    {
+      "action": "move_forward",
+      "distance": 4
+    },
+    {
+      "action": "turn_right",
+      "angle": 90
+    },
+    {
+      "action": "stop_recording"
+    },
+    {
+      "action": "land"
+    }
+  ]
+}

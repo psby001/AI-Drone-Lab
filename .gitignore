@@ -1,0 +1,53 @@
+node_modules/
+.pnpm-store/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+!**/.env.example
+server/.local/
+.venv-dronekit/
+.sitl-test/
+__pycache__/
+*.pyc
+ssl/
+
+# Local reference checkout (separate repository; not part of the application)
+/Drone-Simulator-/
+
+# Credentials, certificates and local configuration
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+*.der
+*.keystore
+.envrc
+credentials.dat
+*.local
+
+# Generated test output, caches and developer environments
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.tsbuildinfo
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.codex/
+.agents/
+
+# Regenerated machine-specific validation reports
+/docs/dronekit-validation.json

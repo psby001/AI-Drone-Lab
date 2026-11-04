@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "name": "自動起飛與降落",
+  "commands": [
+    {
+      "action": "takeoff",
+      "altitude": 3
+    },
+    {
+      "action": "hover",
+      "duration": 2
+    },
+    {
+      "action": "land"
+    }
+  ]
+}

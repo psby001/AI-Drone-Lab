@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "name": "多航點飛行",
+  "commands": [
+    {
+      "action": "takeoff",
+      "altitude": 4
+    },
+    {
+      "action": "move_forward",
+      "distance": 5
+    },
+    {
+      "action": "move_right",
+      "distance": 5
+    },
+    {
+      "action": "ascend",
+      "distance": 2
+    },
+    {
+      "action": "turn_left",
+      "angle": 90
+    },
+    {
+      "action": "move_forward",
+      "distance": 5
+    },
+    {
+      "action": "descend",
+      "distance": 2
+    },
+    {
+      "action": "move_right",
+      "distance": 5
+    },
+    {
+      "action": "hover",
+      "duration": 2
+    },
+    {
+      "action": "land"
+    }
+  ]
+}

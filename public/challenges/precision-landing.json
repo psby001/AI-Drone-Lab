@@ -1,0 +1,150 @@
+{
+  "id": "precision-landing",
+  "version": "1.0.0",
+  "title": "精準降落 Precision Landing",
+  "description": "從指定平台起飛至少 1m，移動至彩色同心圓目標後落地。以第一次實際接地位置計算水平誤差，低速穩定 0.6 秒後結算；超過 3m 失敗。",
+  "difficulty": "beginner",
+  "thumbnail": "/challenges/precision-landing.svg",
+  "scene": {
+    "type": "precision-landing-field",
+    "seed": 85,
+    "params": {
+      "ground": "#c4c5b1",
+      "sky": "#d4deed"
+    },
+    "environment": {
+      "wind": "calm",
+      "direction": 90
+    },
+    "objects": [
+      {
+        "id": "landing-launch",
+        "kind": "platform",
+        "position": {
+          "east": -3,
+          "north": -2,
+          "up": 0
+        },
+        "size": {
+          "east": 2,
+          "north": 2,
+          "up": 0.08
+        },
+        "color": "#314d55",
+        "solid": false
+      }
+    ]
+  },
+  "spawn": {
+    "position": {
+      "east": -3,
+      "north": -2,
+      "up": 0
+    },
+    "heading": 0
+  },
+  "objectives": [
+    {
+      "id": "landing-target",
+      "title": "起飛後降落於目標區",
+      "order": 0,
+      "type": "precision-landing",
+      "params": {
+        "target": {
+          "east": 4,
+          "north": 6,
+          "up": 0
+        },
+        "min_takeoff_altitude": 1,
+        "touchdown_height": 0.12,
+        "settle_seconds": 0.6,
+        "max_landing_speed": 0.5,
+        "max_error": 3
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "landing-boundary",
+      "type": "flight-boundary",
+      "params": {
+        "radius": 25,
+        "max_altitude": 12
+      }
+    },
+    {
+      "id": "landing-collision",
+      "type": "collision",
+      "params": {
+        "fatal": true,
+        "penalty": 0
+      }
+    }
+  ],
+  "scoring": {
+    "type": "landing-accuracy",
+    "params": {
+      "metric_id": "landing-target",
+      "bands": [
+        {
+          "max_error": 0.5,
+          "score": 100
+        },
+        {
+          "max_error": 1,
+          "score": 80
+        },
+        {
+          "max_error": 2,
+          "score": 60
+        },
+        {
+          "max_error": 3,
+          "score": 40
+        }
+      ]
+    }
+  },
+  "allowed_control_modes": [
+    "MANUAL",
+    "AI_MISSION",
+    "MIXED"
+  ],
+  "time_limit": 180,
+  "metadata": {
+    "author": "AI Drone Lab",
+    "experience": "precision-landing",
+    "scoring_rules": [
+      "水平落點誤差 ≤0.5m：100 分；≤1m：80 分；≤2m：60 分；≤3m：40 分；超過 3m 失敗。",
+      "須實際起飛至至少 1m；第一次接地後低速穩定 0.6 秒。單純呼叫 land 或停在出生平台不會完成。",
+      "目標為世界 ENU (4,6,0)，本關起點 (-3,-2,0)；goto_local 使用相對起點 (7,8,3)。"
+    ],
+    "example_mission": {
+      "version": "1.2",
+      "name": "精準降落：自動測試",
+      "commands": [
+        {
+          "action": "set_speed",
+          "speed": 2
+        },
+        {
+          "action": "takeoff",
+          "altitude": 3
+        },
+        {
+          "action": "goto_local",
+          "x": 7,
+          "y": 8,
+          "z": 3
+        },
+        {
+          "action": "hover",
+          "duration": 1
+        },
+        {
+          "action": "land"
+        }
+      ]
+    }
+  }
+}

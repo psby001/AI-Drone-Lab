@@ -1,0 +1,252 @@
+{
+  "id": "waypoint-racing",
+  "version": "1.0.0",
+  "title": "航線競速 Waypoint Racing",
+  "description": "依序通過 5 個航點，金色為目前目標、藍色為未完成、綠色為已完成。倒數結束開始計時；偏離目前航線超過 2m 會加時。通過空中的 FINISH 即結算，可返回自由飛行降落。姿態加成預設關閉。",
+  "difficulty": "beginner",
+  "thumbnail": "/challenges/racing.svg",
+  "scene": {
+    "type": "racing-field",
+    "seed": 20261102,
+    "params": {
+      "ground": "#aebfb1",
+      "sky": "#c5dce7",
+      "radius": 25,
+      "max_altitude": 12
+    },
+    "environment": {
+      "wind": "calm",
+      "direction": 90
+    },
+    "objects": [
+      {
+        "id": "start-pad",
+        "kind": "platform",
+        "position": {
+          "east": 0,
+          "north": 0,
+          "up": 0
+        },
+        "size": {
+          "east": 2,
+          "north": 2,
+          "up": 0.08
+        },
+        "color": "#314d55",
+        "solid": false
+      },
+      {
+        "id": "finish-pad",
+        "kind": "platform",
+        "position": {
+          "east": 0,
+          "north": -3,
+          "up": 0
+        },
+        "size": {
+          "east": 2,
+          "north": 2,
+          "up": 0.08
+        },
+        "color": "#426c66",
+        "solid": false
+      },
+      {
+        "id": "barrier-west",
+        "kind": "obstacle",
+        "position": {
+          "east": -4,
+          "north": 4,
+          "up": 1.5
+        },
+        "size": {
+          "east": 1,
+          "north": 3,
+          "up": 3
+        },
+        "color": "#b76e56",
+        "solid": true
+      },
+      {
+        "id": "barrier-east",
+        "kind": "obstacle",
+        "position": {
+          "east": 12,
+          "north": 4,
+          "up": 1
+        },
+        "size": {
+          "east": 1,
+          "north": 3,
+          "up": 2
+        },
+        "color": "#b76e56",
+        "solid": true
+      }
+    ]
+  },
+  "spawn": {
+    "position": {
+      "east": 0,
+      "north": 0,
+      "up": 0
+    },
+    "heading": 0
+  },
+  "objectives": [
+    {
+      "id": "race-route",
+      "title": "依序通過所有航點",
+      "order": 0,
+      "type": "waypoint-race",
+      "params": {
+        "start": {
+          "east": 0,
+          "north": 0,
+          "up": 0
+        },
+        "waypoints": [
+          {
+            "waypoint_id": "WP1",
+            "position": {
+              "east": 0,
+              "north": 2,
+              "up": 3
+            },
+            "radius": 0.8,
+            "sequence": 1
+          },
+          {
+            "waypoint_id": "WP2",
+            "position": {
+              "east": 0,
+              "north": 8,
+              "up": 3
+            },
+            "radius": 1,
+            "sequence": 2
+          },
+          {
+            "waypoint_id": "WP3",
+            "position": {
+              "east": 8,
+              "north": 8,
+              "up": 4
+            },
+            "radius": 1,
+            "sequence": 3
+          },
+          {
+            "waypoint_id": "WP4",
+            "position": {
+              "east": 8,
+              "north": 0,
+              "up": 3
+            },
+            "radius": 1,
+            "sequence": 4
+          },
+          {
+            "waypoint_id": "FINISH",
+            "position": {
+              "east": 0,
+              "north": -3,
+              "up": 3
+            },
+            "radius": 0.8,
+            "sequence": 5
+          }
+        ],
+        "d_allow": 2,
+        "k": 1,
+        "mode_bonus": {
+          "enabled": false,
+          "required_mode": "attitude",
+          "multiplier": 0.9,
+          "qualification": "all_airborne"
+        }
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "race-boundary",
+      "type": "flight-boundary",
+      "params": {
+        "radius": 25,
+        "max_altitude": 12
+      }
+    },
+    {
+      "id": "race-collision",
+      "type": "collision",
+      "params": {
+        "fatal": true,
+        "penalty": 0
+      }
+    }
+  ],
+  "scoring": {
+    "type": "race-time",
+    "params": {
+      "metric_id": "race-route"
+    }
+  },
+  "allowed_control_modes": [
+    "MANUAL",
+    "AI_MISSION",
+    "MIXED"
+  ],
+  "time_limit": 180,
+  "metadata": {
+    "author": "AI Drone Lab",
+    "experience": "waypoint-racing",
+    "example_mission": {
+      "version": "1.2",
+      "name": "航線競速：預設自動測試",
+      "commands": [
+        {
+          "action": "set_speed",
+          "speed": 2
+        },
+        {
+          "action": "takeoff",
+          "altitude": 3
+        },
+        {
+          "action": "goto_local",
+          "x": 0,
+          "y": 2,
+          "z": 3
+        },
+        {
+          "action": "goto_local",
+          "x": 0,
+          "y": 8,
+          "z": 3
+        },
+        {
+          "action": "goto_local",
+          "x": 8,
+          "y": 8,
+          "z": 4
+        },
+        {
+          "action": "goto_local",
+          "x": 8,
+          "y": 0,
+          "z": 3
+        },
+        {
+          "action": "goto_local",
+          "x": 0,
+          "y": -3,
+          "z": 3
+        },
+        {
+          "action": "land"
+        }
+      ]
+    }
+  }
+}

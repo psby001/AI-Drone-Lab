@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "AI Drone Lab 飛行實驗室",
+  "short_name": "AI Drone Lab",
+  "description": "無人機模擬、飛行任務與 AI 編程教學平台",
+  "lang": "zh-Hant",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101d27",
+  "theme_color": "#101d27",
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/icons/drone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/drone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/drone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

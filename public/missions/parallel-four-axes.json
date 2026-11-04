@@ -1,0 +1,39 @@
+{
+  "version": "1.2",
+  "name": "四軸平行控制",
+  "commands": [
+    {
+      "action": "takeoff",
+      "altitude": 3
+    },
+    {
+      "action": "parallel",
+      "reference_frame": "start",
+      "commands": [
+        {
+          "action": "move_forward",
+          "distance": 8,
+          "speed": 2
+        },
+        {
+          "action": "move_right",
+          "distance": 4,
+          "speed": 2
+        },
+        {
+          "action": "ascend",
+          "distance": 2,
+          "speed": 1
+        },
+        {
+          "action": "turn_right",
+          "angle": 90,
+          "speed": 45
+        }
+      ]
+    },
+    {
+      "action": "land"
+    }
+  ]
+}

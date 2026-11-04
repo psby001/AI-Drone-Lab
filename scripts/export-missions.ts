@@ -1,0 +1,11 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { missionSchema } from '../src/missions/schema';
+import { PRESETS } from '../src/missions/presets';
+import { generatePython } from '../src/dronekit/generate';
+import { CAMERA_PRESETS } from '../src/camera/presets';
+await mkdir('public/missions',{recursive:true});
+await writeFile('public/missions/mission.schema.json',JSON.stringify(missionSchema,null,2)+'\n');
+for(const preset of PRESETS) await writeFile(`public/missions/${preset.id}.json`,JSON.stringify(preset.mission,null,2)+'\n');
+for(const preset of CAMERA_PRESETS) await writeFile(`public/missions/${preset.id}.json`,JSON.stringify(preset.mission,null,2)+'\n');
+await mkdir('public/dronekit',{recursive:true});
+for(const preset of PRESETS)await writeFile(`public/dronekit/${preset.id}.py`,(await generatePython(preset.mission)).code);

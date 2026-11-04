@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "name": "前進後返回",
+  "commands": [
+    {
+      "action": "takeoff",
+      "altitude": 4
+    },
+    {
+      "action": "move_forward",
+      "distance": 8
+    },
+    {
+      "action": "hover",
+      "duration": 1
+    },
+    {
+      "action": "move_backward",
+      "distance": 8
+    },
+    {
+      "action": "land"
+    }
+  ]
+}

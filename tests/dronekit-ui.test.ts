@@ -1,0 +1,44 @@
+import { it } from 'node:test';
+import assert from 'node:assert/strict';
+import { JSDOM } from 'jsdom';
+import { act,createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { DroneKitPanel } from '../src/components/DroneKitPanel';
+import { PRESETS } from '../src/missions/presets';
+it('code UI copies/downloads full Python, maps steps, and blocks stale or invalid JSON',async()=>{
+  const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost'});
+  Object.assign(globalThis,{window:dom.window,document:dom.window.document,IS_REACT_ACT_ENVIRONMENT:true});
+  let copied='',downloaded:Blob|undefined,filename='',scrolled=false;
+  const originalNavigator=Object.getOwnPropertyDescriptor(globalThis,'navigator');
+  Object.defineProperty(globalThis,'navigator',{value:{clipboard:{writeText:async(text:string)=>{copied=text;}}},configurable:true});
+  const create=URL.createObjectURL,revoke=URL.revokeObjectURL;
+  URL.createObjectURL=blob=>{downloaded=blob as Blob;return'blob:test';};URL.revokeObjectURL=()=>{};
+  dom.window.HTMLAnchorElement.prototype.click=function(){filename=this.download;};
+  dom.window.HTMLElement.prototype.scrollIntoView=function(){scrolled=true;};
+  const root=createRoot(document.getElementById('root')!);
+  const render=async(source:unknown,dirty=false)=>{await act(async()=>{root.render(createElement(DroneKitPanel,{source,dirty}));await new Promise(r=>setTimeout(r,30));});};
+  try{
+    await render(PRESETS[2].mission);
+    await act(async()=>{await new Promise(r=>setTimeout(r,30));});
+    const click=async(text:string)=>act(async()=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text)!;assert.ok(b);b.click();});
+    assert.equal(document.querySelectorAll('select option').length,11);
+    assert.match(document.body.textContent!,/SITL：尚未驗證/);
+    assert.ok(document.querySelectorAll('.py-keyword').length>0);
+    assert.match(document.querySelector('pre.python-code')!.textContent!,/drone.takeoff\(altitude=5\)/);
+    assert.ok(!document.querySelector('pre.python-code')!.textContent!.includes('PLAN_B64'));
+    await click('複製 Python');assert.match(copied,/from dronekit import connect, VehicleMode/);
+    await click('下載 .py');assert.equal(filename,'ai-drone-mission.py');assert.equal(await downloaded!.text(),copied);
+    const select=document.querySelector('select')!;
+    await act(()=>{select.selectedIndex=2;select.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
+    assert.equal(scrolled,true);assert.match(document.querySelector('.python-line.selected')!.textContent!,/drone.move_forward\(distance=6\)/);
+    const trace=document.querySelector('[aria-label="所選步驟的 DroneKit 實作"]')!;
+    assert.match(trace.textContent!,/前進 6m：底層如何執行/);
+    assert.match(trace.textContent!,/沒有原生 move_forward/);
+    assert.match(trace.querySelector('[aria-label="DroneController.send_target"]')!.textContent!,/self.v.send_mavlink\(message\)/);
+    await act(()=>document.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());
+    assert.match(document.querySelector('pre.python-code')!.textContent!,/class DroneController/);
+    await render(PRESETS[2].mission,true);assert.equal(document.querySelector('pre.python-code'),null);assert.equal(document.querySelector('button'),null);
+    await render({commands:[{action:'takeoff',altitude:99},{action:'land'}]});
+    assert.ok(document.querySelector('[role="alert"]'));assert.equal(document.querySelector('button'),null);
+  }finally{await act(()=>root.unmount());URL.createObjectURL=create;URL.revokeObjectURL=revoke;if(originalNavigator)Object.defineProperty(globalThis,'navigator',originalNavigator);dom.window.close();}
+});

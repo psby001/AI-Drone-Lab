@@ -1,0 +1,35 @@
+{
+  "version": "1.2",
+  "name": "空中攝影體驗",
+  "commands": [
+    {
+      "action": "takeoff",
+      "altitude": 5
+    },
+    {
+      "action": "set_camera_view",
+      "view": "nadir",
+      "mode": "stabilized"
+    },
+    {
+      "action": "capture_photo"
+    },
+    {
+      "action": "set_camera_view",
+      "view": "oblique"
+    },
+    {
+      "action": "set_gimbal_yaw",
+      "angle": 30
+    },
+    {
+      "action": "capture_photo"
+    },
+    {
+      "action": "reset_gimbal"
+    },
+    {
+      "action": "land"
+    }
+  ]
+}

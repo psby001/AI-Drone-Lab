@@ -1,0 +1,1867 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AI Drone Lab ChallengeDefinition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "title",
+    "description",
+    "difficulty",
+    "thumbnail",
+    "scene",
+    "spawn",
+    "objectives",
+    "rules",
+    "scoring",
+    "allowed_control_modes",
+    "time_limit",
+    "metadata"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,80}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "difficulty": {
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ]
+    },
+    "thumbnail": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "scene": {
+      "type": "object",
+      "required": [
+        "type",
+        "params",
+        "seed",
+        "objects",
+        "environment"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "params": {
+          "type": "object"
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wind",
+            "direction"
+          ],
+          "properties": {
+            "wind": {
+              "enum": [
+                "calm",
+                "breeze",
+                "strong"
+              ]
+            },
+            "direction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 360
+            }
+          }
+        },
+        "objects": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "position",
+              "size",
+              "color",
+              "solid"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "kind": {
+                "enum": [
+                  "building",
+                  "obstacle",
+                  "platform",
+                  "waypoint",
+                  "zone",
+                  "target"
+                ]
+              },
+              "position": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "east",
+                  "north",
+                  "up"
+                ],
+                "properties": {
+                  "east": {
+                    "type": "number",
+                    "minimum": -50,
+                    "maximum": 50
+                  },
+                  "north": {
+                    "type": "number",
+                    "minimum": -50,
+                    "maximum": 50
+                  },
+                  "up": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 20
+                  }
+                }
+              },
+              "size": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "east",
+                  "north",
+                  "up"
+                ],
+                "properties": {
+                  "east": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 100
+                  },
+                  "north": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 100
+                  },
+                  "up": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 40
+                  }
+                }
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "solid": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "training-ground"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ground",
+                    "sky"
+                  ],
+                  "properties": {
+                    "ground": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "sky": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "marker-garden"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ground",
+                    "sky"
+                  ],
+                  "properties": {
+                    "ground": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "sky": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "racing-field"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ground",
+                    "sky",
+                    "radius",
+                    "max_altitude"
+                  ],
+                  "properties": {
+                    "ground": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "sky": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "radius": {
+                      "type": "number",
+                      "minimum": 10,
+                      "maximum": 45
+                    },
+                    "max_altitude": {
+                      "type": "number",
+                      "minimum": 5,
+                      "maximum": 20
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "precision-landing-field"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ground",
+                    "sky"
+                  ],
+                  "properties": {
+                    "ground": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "sky": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "photo-hunt-town"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ground",
+                    "sky",
+                    "randomize"
+                  ],
+                  "properties": {
+                    "ground": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "sky": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "randomize": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "spawn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "heading"
+      ],
+      "properties": {
+        "position": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "east",
+            "north",
+            "up"
+          ],
+          "properties": {
+            "east": {
+              "type": "number",
+              "minimum": -50,
+              "maximum": 50
+            },
+            "north": {
+              "type": "number",
+              "minimum": -50,
+              "maximum": 50
+            },
+            "up": {
+              "const": 0
+            }
+          }
+        },
+        "heading": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360
+        }
+      }
+    },
+    "objectives": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "params",
+          "id",
+          "title",
+          "order"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "params": {
+            "type": "object"
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "stay-zone"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "east",
+                      "north",
+                      "up",
+                      "radius",
+                      "hold_seconds",
+                      "max_speed"
+                    ],
+                    "properties": {
+                      "east": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "north": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "up": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 20
+                      },
+                      "radius": {
+                        "type": "number",
+                        "minimum": 0.2,
+                        "maximum": 10
+                      },
+                      "hold_seconds": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 60
+                      },
+                      "max_speed": {
+                        "type": "number",
+                        "minimum": 0.05,
+                        "maximum": 10
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "land-zone"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "east",
+                      "north",
+                      "up",
+                      "radius",
+                      "hold_seconds",
+                      "max_speed"
+                    ],
+                    "properties": {
+                      "east": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "north": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "up": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 20
+                      },
+                      "radius": {
+                        "type": "number",
+                        "minimum": 0.2,
+                        "maximum": 10
+                      },
+                      "hold_seconds": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 60
+                      },
+                      "max_speed": {
+                        "type": "number",
+                        "minimum": 0.05,
+                        "maximum": 10
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "flight-boundary"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "radius",
+                      "max_altitude"
+                    ],
+                    "properties": {
+                      "radius": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 50
+                      },
+                      "max_altitude": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 20
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "collision"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "fatal",
+                      "penalty"
+                    ],
+                    "properties": {
+                      "fatal": {
+                        "type": "boolean"
+                      },
+                      "penalty": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1000
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "waypoint-race"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "start",
+                      "waypoints",
+                      "d_allow",
+                      "k",
+                      "mode_bonus"
+                    ],
+                    "properties": {
+                      "start": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "east",
+                          "north",
+                          "up"
+                        ],
+                        "properties": {
+                          "east": {
+                            "type": "number",
+                            "minimum": -40,
+                            "maximum": 40
+                          },
+                          "north": {
+                            "type": "number",
+                            "minimum": -40,
+                            "maximum": 40
+                          },
+                          "up": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 15
+                          }
+                        }
+                      },
+                      "d_allow": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 20
+                      },
+                      "k": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "waypoints": {
+                        "type": "array",
+                        "minItems": 3,
+                        "maxItems": 5,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "waypoint_id",
+                            "position",
+                            "radius",
+                            "sequence"
+                          ],
+                          "properties": {
+                            "waypoint_id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 80
+                            },
+                            "position": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "east",
+                                "north",
+                                "up"
+                              ],
+                              "properties": {
+                                "east": {
+                                  "type": "number",
+                                  "minimum": -40,
+                                  "maximum": 40
+                                },
+                                "north": {
+                                  "type": "number",
+                                  "minimum": -40,
+                                  "maximum": 40
+                                },
+                                "up": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              }
+                            },
+                            "radius": {
+                              "type": "number",
+                              "minimum": 0.2,
+                              "maximum": 5
+                            },
+                            "sequence": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "heading": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "degrees",
+                                "tolerance"
+                              ],
+                              "properties": {
+                                "degrees": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 360
+                                },
+                                "tolerance": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 180
+                                }
+                              }
+                            },
+                            "altitude": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "min",
+                                "max"
+                              ],
+                              "properties": {
+                                "min": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "max": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "mode_bonus": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "enabled",
+                          "required_mode",
+                          "multiplier",
+                          "qualification"
+                        ],
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "required_mode": {
+                            "const": "attitude"
+                          },
+                          "multiplier": {
+                            "type": "number",
+                            "minimum": 0.1,
+                            "maximum": 1
+                          },
+                          "qualification": {
+                            "const": "all_airborne"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "precision-landing"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "target",
+                      "min_takeoff_altitude",
+                      "touchdown_height",
+                      "settle_seconds",
+                      "max_landing_speed",
+                      "max_error"
+                    ],
+                    "properties": {
+                      "target": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "east",
+                          "north",
+                          "up"
+                        ],
+                        "properties": {
+                          "east": {
+                            "type": "number",
+                            "minimum": -30,
+                            "maximum": 30
+                          },
+                          "north": {
+                            "type": "number",
+                            "minimum": -30,
+                            "maximum": 30
+                          },
+                          "up": {
+                            "const": 0
+                          }
+                        }
+                      },
+                      "min_takeoff_altitude": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 10
+                      },
+                      "touchdown_height": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "settle_seconds": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 5
+                      },
+                      "max_landing_speed": {
+                        "type": "number",
+                        "minimum": 0.01,
+                        "maximum": 1
+                      },
+                      "max_error": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 10
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "photo-hunt"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "targets"
+                    ],
+                    "properties": {
+                      "targets": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 10,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "object_id",
+                            "class_name",
+                            "display_name",
+                            "target_description",
+                            "spawn_candidates",
+                            "scoring_config"
+                          ],
+                          "properties": {
+                            "object_id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9-]+$"
+                            },
+                            "class_name": {
+                              "enum": [
+                                "car",
+                                "tent",
+                                "container"
+                              ]
+                            },
+                            "display_name": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "target_description": {
+                              "type": "string"
+                            },
+                            "spawn_candidates": {
+                              "type": "array",
+                              "minItems": 1,
+                              "maxItems": 10,
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "east",
+                                  "north",
+                                  "up"
+                                ],
+                                "properties": {
+                                  "east": {
+                                    "type": "number",
+                                    "minimum": -35,
+                                    "maximum": 35
+                                  },
+                                  "north": {
+                                    "type": "number",
+                                    "minimum": -35,
+                                    "maximum": 35
+                                  },
+                                  "up": {
+                                    "const": 0
+                                  }
+                                }
+                              }
+                            },
+                            "scoring_config": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "min_visibility",
+                                "min_in_frame",
+                                "min_area",
+                                "ideal_area_min",
+                                "ideal_area_max",
+                                "oversize_floor",
+                                "visibility_points",
+                                "composition_points",
+                                "size_points"
+                              ],
+                              "properties": {
+                                "min_visibility": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                "min_in_frame": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                "min_area": {
+                                  "type": "number",
+                                  "minimum": 0.001,
+                                  "maximum": 0.5
+                                },
+                                "ideal_area_min": {
+                                  "type": "number",
+                                  "minimum": 0.001,
+                                  "maximum": 0.8
+                                },
+                                "ideal_area_max": {
+                                  "type": "number",
+                                  "minimum": 0.001,
+                                  "maximum": 0.9
+                                },
+                                "oversize_floor": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                "visibility_points": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                },
+                                "composition_points": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                },
+                                "size_points": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "rules": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "params"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "params": {
+            "type": "object"
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "stay-zone"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "east",
+                      "north",
+                      "up",
+                      "radius",
+                      "hold_seconds",
+                      "max_speed"
+                    ],
+                    "properties": {
+                      "east": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "north": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "up": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 20
+                      },
+                      "radius": {
+                        "type": "number",
+                        "minimum": 0.2,
+                        "maximum": 10
+                      },
+                      "hold_seconds": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 60
+                      },
+                      "max_speed": {
+                        "type": "number",
+                        "minimum": 0.05,
+                        "maximum": 10
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "land-zone"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "east",
+                      "north",
+                      "up",
+                      "radius",
+                      "hold_seconds",
+                      "max_speed"
+                    ],
+                    "properties": {
+                      "east": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "north": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "up": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 20
+                      },
+                      "radius": {
+                        "type": "number",
+                        "minimum": 0.2,
+                        "maximum": 10
+                      },
+                      "hold_seconds": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 60
+                      },
+                      "max_speed": {
+                        "type": "number",
+                        "minimum": 0.05,
+                        "maximum": 10
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "flight-boundary"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "radius",
+                      "max_altitude"
+                    ],
+                    "properties": {
+                      "radius": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 50
+                      },
+                      "max_altitude": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 20
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "collision"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "fatal",
+                      "penalty"
+                    ],
+                    "properties": {
+                      "fatal": {
+                        "type": "boolean"
+                      },
+                      "penalty": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1000
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "waypoint-race"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "start",
+                      "waypoints",
+                      "d_allow",
+                      "k",
+                      "mode_bonus"
+                    ],
+                    "properties": {
+                      "start": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "east",
+                          "north",
+                          "up"
+                        ],
+                        "properties": {
+                          "east": {
+                            "type": "number",
+                            "minimum": -40,
+                            "maximum": 40
+                          },
+                          "north": {
+                            "type": "number",
+                            "minimum": -40,
+                            "maximum": 40
+                          },
+                          "up": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 15
+                          }
+                        }
+                      },
+                      "d_allow": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 20
+                      },
+                      "k": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "waypoints": {
+                        "type": "array",
+                        "minItems": 3,
+                        "maxItems": 5,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "waypoint_id",
+                            "position",
+                            "radius",
+                            "sequence"
+                          ],
+                          "properties": {
+                            "waypoint_id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 80
+                            },
+                            "position": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "east",
+                                "north",
+                                "up"
+                              ],
+                              "properties": {
+                                "east": {
+                                  "type": "number",
+                                  "minimum": -40,
+                                  "maximum": 40
+                                },
+                                "north": {
+                                  "type": "number",
+                                  "minimum": -40,
+                                  "maximum": 40
+                                },
+                                "up": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              }
+                            },
+                            "radius": {
+                              "type": "number",
+                              "minimum": 0.2,
+                              "maximum": 5
+                            },
+                            "sequence": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "heading": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "degrees",
+                                "tolerance"
+                              ],
+                              "properties": {
+                                "degrees": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 360
+                                },
+                                "tolerance": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 180
+                                }
+                              }
+                            },
+                            "altitude": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "min",
+                                "max"
+                              ],
+                              "properties": {
+                                "min": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "max": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "mode_bonus": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "enabled",
+                          "required_mode",
+                          "multiplier",
+                          "qualification"
+                        ],
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "required_mode": {
+                            "const": "attitude"
+                          },
+                          "multiplier": {
+                            "type": "number",
+                            "minimum": 0.1,
+                            "maximum": 1
+                          },
+                          "qualification": {
+                            "const": "all_airborne"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "precision-landing"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "target",
+                      "min_takeoff_altitude",
+                      "touchdown_height",
+                      "settle_seconds",
+                      "max_landing_speed",
+                      "max_error"
+                    ],
+                    "properties": {
+                      "target": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "east",
+                          "north",
+                          "up"
+                        ],
+                        "properties": {
+                          "east": {
+                            "type": "number",
+                            "minimum": -30,
+                            "maximum": 30
+                          },
+                          "north": {
+                            "type": "number",
+                            "minimum": -30,
+                            "maximum": 30
+                          },
+                          "up": {
+                            "const": 0
+                          }
+                        }
+                      },
+                      "min_takeoff_altitude": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 10
+                      },
+                      "touchdown_height": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "settle_seconds": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 5
+                      },
+                      "max_landing_speed": {
+                        "type": "number",
+                        "minimum": 0.01,
+                        "maximum": 1
+                      },
+                      "max_error": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 10
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "photo-hunt"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "targets"
+                    ],
+                    "properties": {
+                      "targets": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 10,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "object_id",
+                            "class_name",
+                            "display_name",
+                            "target_description",
+                            "spawn_candidates",
+                            "scoring_config"
+                          ],
+                          "properties": {
+                            "object_id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9-]+$"
+                            },
+                            "class_name": {
+                              "enum": [
+                                "car",
+                                "tent",
+                                "container"
+                              ]
+                            },
+                            "display_name": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "target_description": {
+                              "type": "string"
+                            },
+                            "spawn_candidates": {
+                              "type": "array",
+                              "minItems": 1,
+                              "maxItems": 10,
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "east",
+                                  "north",
+                                  "up"
+                                ],
+                                "properties": {
+                                  "east": {
+                                    "type": "number",
+                                    "minimum": -35,
+                                    "maximum": 35
+                                  },
+                                  "north": {
+                                    "type": "number",
+                                    "minimum": -35,
+                                    "maximum": 35
+                                  },
+                                  "up": {
+                                    "const": 0
+                                  }
+                                }
+                              }
+                            },
+                            "scoring_config": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "min_visibility",
+                                "min_in_frame",
+                                "min_area",
+                                "ideal_area_min",
+                                "ideal_area_max",
+                                "oversize_floor",
+                                "visibility_points",
+                                "composition_points",
+                                "size_points"
+                              ],
+                              "properties": {
+                                "min_visibility": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                "min_in_frame": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                "min_area": {
+                                  "type": "number",
+                                  "minimum": 0.001,
+                                  "maximum": 0.5
+                                },
+                                "ideal_area_min": {
+                                  "type": "number",
+                                  "minimum": 0.001,
+                                  "maximum": 0.8
+                                },
+                                "ideal_area_max": {
+                                  "type": "number",
+                                  "minimum": 0.001,
+                                  "maximum": 0.9
+                                },
+                                "oversize_floor": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                "visibility_points": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                },
+                                "composition_points": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                },
+                                "size_points": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "params"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "required": [
+        "type",
+        "params"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "params": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "points"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "completion",
+                    "precision",
+                    "collection",
+                    "time_bonus",
+                    "multiplier"
+                  ],
+                  "properties": {
+                    "completion": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "precision": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "collection": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "time_bonus": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 10000
+                    },
+                    "multiplier": {
+                      "type": "number",
+                      "minimum": 0.1,
+                      "maximum": 10
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "elapsed-time"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [],
+                  "properties": {}
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "race-time"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "metric_id"
+                  ],
+                  "properties": {
+                    "metric_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "landing-accuracy"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "metric_id",
+                    "bands"
+                  ],
+                  "properties": {
+                    "metric_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "bands": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 10,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "max_error",
+                          "score"
+                        ],
+                        "properties": {
+                          "max_error": {
+                            "type": "number",
+                            "minimum": 0.01,
+                            "maximum": 10
+                          },
+                          "score": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1000
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "photo-quality"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "metric_id",
+                    "target_count"
+                  ],
+                  "properties": {
+                    "metric_id": {
+                      "type": "string"
+                    },
+                    "target_count": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "params"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "allowed_control_modes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "MANUAL",
+          "AI_MISSION",
+          "MIXED"
+        ]
+      }
+    },
+    "time_limit": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 3600
+    },
+    "metadata": {
+      "type": "object"
+    }
+  }
+}
