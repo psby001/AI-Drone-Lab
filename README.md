@@ -6,6 +6,12 @@
 
 ## 專案簡介
 
+### 線上體驗
+
+透過 GitHub 與 Vercel 部署的網頁版本：**[開啟 AI Drone Lab](https://ai-drone-lab-ujoi.vercel.app/)**。
+
+此版本可直接透過瀏覽器體驗飛行模擬、JSON 自動任務、相機與挑戰關卡，**未提供 AI 自然語言編程功能**。如需使用 AI，請依下方安裝說明在本機啟動前後端並設定授權。
+
 AI Drone Lab 將 3D 飛行、自然語言編程與挑戰關卡整合在瀏覽器中，適合無人機體驗課程、學生教學及自主練習。使用者可以手動操控無人機，或以繁體中文描述任務，預覽 AI 產生的飛行步驟後執行模擬，也能下載對應的 DroneKit-Python 程式碼進一步學習。
 
 平台以 **React、TypeScript、Three.js 與 Node.js** 建立，提供桌面與手機操作介面。基本飛行、JSON 任務及關卡可獨立使用，不需要 OpenAI 帳號、API Key 或 Python。
