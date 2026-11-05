@@ -1,11 +1,12 @@
+import { mobileInterface,subscribeInterfaceLayout } from '../interfaceLayout';
 import { useEffect,useRef,useState } from 'react';
 import type { DroneScene } from '../render/DroneScene';
 export const DESKTOP_PREVIEW_QUERY='(min-width: 701px) and (min-height: 601px), (min-width: 1101px)';
 export function DesktopPreviews({scene}:{scene:DroneScene|null}){
-  const [desktop,setDesktop]=useState(()=>window.matchMedia(DESKTOP_PREVIEW_QUERY).matches);
+  const [desktop,setDesktop]=useState(()=>!mobileInterface(!window.matchMedia(DESKTOP_PREVIEW_QUERY).matches));
   const [showCamera,setShowCamera]=useState(true),[showOverhead,setShowOverhead]=useState(true);
   const camera=useRef<HTMLCanvasElement>(null),overhead=useRef<HTMLDivElement>(null);
-  useEffect(()=>{const media=window.matchMedia(DESKTOP_PREVIEW_QUERY),change=()=>setDesktop(media.matches);media.addEventListener('change',change);change();return()=>media.removeEventListener('change',change);},[]);
+  useEffect(()=>{const media=window.matchMedia(DESKTOP_PREVIEW_QUERY),change=()=>setDesktop(!mobileInterface(!media.matches));media.addEventListener('change',change);const unsubscribe=subscribeInterfaceLayout(change);change();return()=>{media.removeEventListener('change',change);unsubscribe();};},[]);
   useEffect(()=>{
     if(!desktop||!scene||!showCamera)return;
     const target=camera.current,context=target?.getContext('2d');

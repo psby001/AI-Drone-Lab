@@ -1,3 +1,4 @@
+import { mobileInterface,subscribeInterfaceLayout } from '../interfaceLayout';
 import { useLayoutEffect,useState } from 'react';
 import { fitCameraPreview,type ScreenRect } from './previewLayout';
 const QUERY='(max-width:700px), (max-height:600px) and (max-width:1100px)';
@@ -12,7 +13,7 @@ export function useMobileCameraLayout(enabled:boolean,fullscreen:boolean,aspect:
     const resize=typeof ResizeObserver==='function'?new ResizeObserver(()=>schedule()):null;
     const measure=()=>{
       if(disposed)return;
-      const mobile=media.matches&&!fullscreen,workspace=document.querySelector('.manual-app .workspace'),main=document.querySelector('.manual-app main');
+      const mobile=mobileInterface(media.matches)&&!fullscreen,workspace=document.querySelector('.manual-app .workspace'),main=document.querySelector('.manual-app main');
       let result:ScreenRect|null=null;
       if(mobile&&workspace){
         const viewport=window.visualViewport,w=rect(workspace.getBoundingClientRect()),left=Math.max(w.x,viewport?.offsetLeft??0),top=Math.max(w.y,viewport?.offsetTop??0);
@@ -29,9 +30,10 @@ export function useMobileCameraLayout(enabled:boolean,fullscreen:boolean,aspect:
     function schedule(){if(disposed||frame)return;frame=requestAnimationFrame(()=>{frame=0;measure();});}
     const mutations=new MutationObserver(entries=>{if(entries.some(e=>!(e.type==='attributes'&&e.attributeName==='style'&&e.target instanceof Element&&e.target.classList.contains('stick-thumb'))))schedule();}),main=document.querySelector('.manual-app main');
     if(main)mutations.observe(main,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden']});
+    const unsubscribe=subscribeInterfaceLayout(schedule);
     media.addEventListener('change',schedule);window.addEventListener('resize',schedule);window.visualViewport?.addEventListener('resize',schedule);window.visualViewport?.addEventListener('scroll',schedule);
     measure();
-    return()=>{disposed=true;cancelAnimationFrame(frame);resize?.disconnect();mutations.disconnect();media.removeEventListener('change',schedule);window.removeEventListener('resize',schedule);window.visualViewport?.removeEventListener('resize',schedule);window.visualViewport?.removeEventListener('scroll',schedule);};
+    return()=>{unsubscribe();disposed=true;cancelAnimationFrame(frame);resize?.disconnect();mutations.disconnect();media.removeEventListener('change',schedule);window.removeEventListener('resize',schedule);window.visualViewport?.removeEventListener('resize',schedule);window.visualViewport?.removeEventListener('scroll',schedule);};
   },[enabled,fullscreen,aspect]);
   return layout;
 }

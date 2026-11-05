@@ -128,3 +128,44 @@
 .desktop-preview-switches { grid-column: 1 / -1; display: flex; gap: 8px; pointer-events: auto; }
 .desktop-preview-switches button { min-height: 34px; padding: 6px 10px; font-size: 11px; background: #f2f6ed; box-shadow: 0 2px 6px #183b3726; }
 .desktop-preview-switches button[aria-pressed="true"] { background: #315b50; color: white; }
+
+/* Desktop challenge feedback stays at the upper-left of the flight view. */
+@media (min-width:701px) and (min-height:601px), (min-width:1101px) {
+  .manual-app .challenge-hud { top: 108px; left: 28px; right: auto; transform: none; }
+}
+
+.flight-panel-fit { transform-origin: top left; }
+@media (min-width:701px) and (min-height:601px), (min-width:1101px) {
+  html:has(.manual-app), body:has(.manual-app) { height: 100%; overflow: hidden; }
+  .manual-app { height: 100dvh; display: flex; flex-direction: column; }
+  .manual-app header { flex: 0 0 64px; height: 64px; min-height: 64px; padding: 0 20px; gap: 8px; }
+  .manual-app .brand { font-size: 14px; letter-spacing: 1px; }
+  .manual-app .brand small { font-size: 8px; letter-spacing: 1px; }
+  .manual-app .brand-icon { font-size: 27px; }
+  .manual-app .controller-tools { gap: 4px; }
+  .manual-app .help-button { font-size: 11px; padding: 5px 8px; min-height: 36px; }
+  .manual-app main { flex: 1; min-height: 0; position: relative; grid-template-columns: minmax(0,1fr) 320px; gap: 16px; padding: 12px 20px; }
+  .manual-app .workspace { min-height: 0; height: 100%; }
+  .manual-app aside { min-height: 0; height: 100%; overflow: hidden; }
+  .manual-app footer { display: none; }
+  .manual-app .panel-heading h2 { margin: 4px 0 10px; }
+  .manual-app .metrics > div { padding: 10px; }
+  .manual-app .metrics strong { font-size: 30px; line-height: 1.4; }
+  .manual-app .coordinates { margin: 8px 0 12px; padding: 10px; }
+  .manual-app .coordinates > span { margin-bottom: 6px; }
+  .manual-app .coordinates > div { margin-bottom: 8px; }
+  .manual-app .control-title h2 { margin: 4px 0 8px; }
+  .manual-app .actions { gap: 6px; }
+  .manual-app .actions button { min-height: 36px; font-size: 12px; }
+  .manual-app .mode-explainer { font-size: 10px; line-height: 1.5; margin: 8px 0; }
+  .manual-app .joystick-deck { margin-top: 10px; gap: 8px; }
+  .manual-app .joystick { width: 126px; height: 126px; }
+  .manual-app .keyboard-guide { margin-top: 10px; padding-top: 5px; }
+  .manual-app .keyboard-guide h3 { margin: 4px 0; }
+  .manual-app .keyboard-guide p { line-height: 1.8; }
+  .manual-app .keyboard-guide small { line-height: 1.5; }
+}
+@media (max-width:700px), (max-height:600px) and (max-width:1100px) {
+  .flight-panel-fit { display: contents; }
+  .manual-app .flight-panel-fit > .panel-heading { display: none; }
+}
