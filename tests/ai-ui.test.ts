@@ -1,3 +1,6 @@
+import * as Blockly from 'blockly';
+import {workspaceToMission} from '../src/blockly/missionBlocks';
+import {prepareBlocklyDom} from './fixtures/blockly-dom';
 import { it } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
@@ -13,6 +16,7 @@ async function setup(){
   const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost',pretendToBeVisual:true});
   Object.assign(globalThis,{window:dom.window,document:dom.window.document,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true,requestAnimationFrame:(cb:()=>void)=>{cb();return 1;}});
   dom.window.HTMLElement.prototype.scrollIntoView=()=>{};
+  prepareBlocklyDom(dom.window as unknown as Window & typeof globalThis);
   const {createRoot}=await import('react-dom/client');
   const model=new FlightModel('calm'),runner=new MissionRunner(model);runner.load(PRESETS[0].mission);
   let refresh=()=>{};
@@ -33,13 +37,12 @@ it('Chinese AI preview requires explicit start, supports JSON editing and rerunn
   try{
     await f.click('轉向與前進');assert.equal((document.getElementById('ai-prompt') as HTMLTextAreaElement).value,PROMPT_EXAMPLES[0]);
     await f.click('產生任務');assert.match(document.querySelector('.ai-answer')!.textContent!,/尚未執行/);
-    assert.equal(document.querySelectorAll('.ai-preview li').length,5);assert.match(document.querySelector('.ai-preview pre')!.textContent!,/turn_right/);
-    assert.equal(f.model.state.mode,'grounded');assert.equal(f.runner.ownsControl,false);
-    await f.click('修改任務 JSON');assert.equal(document.activeElement?.id,'mission-json');assert.match((document.getElementById('mission-json') as HTMLTextAreaElement).value,/move_forward/);
-    await f.click('開始模擬');assert.equal(f.runner.snapshot.status,'running');assert.equal((document.getElementById('ai-prompt') as HTMLTextAreaElement).disabled,true);
+    assert.equal(document.querySelector('.ai-preview pre'),null);assert.equal(document.getElementById('mission-json'),null);
+    assert.equal(f.model.state.mode,'grounded');await f.click('轉成積木編輯');assert.deepEqual(workspaceToMission(Blockly.getMainWorkspace()),exampleMission);assert.equal(f.runner.ownsControl,false);
+    await f.click('▶ 執行積木');assert.equal(f.runner.snapshot.status,'running');assert.equal((document.getElementById('ai-prompt') as HTMLTextAreaElement).disabled,true);
     await act(()=>{for(let i=0;i<21600&&f.runner.ownsControl;i++)f.runner.update(1/120);f.refresh();});
     assert.equal(f.runner.snapshot.status,'completed');assert.ok(Math.abs(f.model.state.position.east-5)<0.4);assert.ok(Math.abs(f.model.state.position.north-10)<0.4);
-    await f.click('↻ 重新執行');assert.equal(f.runner.snapshot.status,'running');assert.equal(calls,1);
+    await f.click('▶ 執行積木');assert.equal(f.runner.snapshot.status,'running');assert.equal(calls,1);
   }finally{await f.close();globalThis.fetch=oldFetch;}
 });
 it('API failure retains student input and the current task, and fallback uses no API',async()=>{
@@ -47,11 +50,11 @@ it('API failure retains student input and the current task, and fallback uses no
   globalThis.fetch=(async()=>{calls++;return Response.json({error:{code:'NOT_CONFIGURED',message:'AI 尚未設定金鑰，請使用預設任務。'}},{status:503});}) as typeof fetch;
   const f=await setup();
   try{
-    await f.click('側向平移');const source=(document.getElementById('mission-json') as HTMLTextAreaElement).value;
+    await f.click('側向平移');const source=workspaceToMission(Blockly.getMainWorkspace());
     await f.click('產生任務');assert.match(document.querySelector('.ai-error')!.textContent!,/尚未設定金鑰/);
     assert.equal((document.getElementById('ai-prompt') as HTMLTextAreaElement).value,PROMPT_EXAMPLES[1]);
-    assert.equal((document.getElementById('mission-json') as HTMLTextAreaElement).value,source);assert.equal(document.querySelector('.ai-preview'),null);
-    await f.click('使用起降預設');await f.click('▶ 開始');assert.equal(f.runner.snapshot.status,'running');assert.equal(calls,1);
+    assert.deepEqual(workspaceToMission(Blockly.getMainWorkspace()),source);assert.equal(document.querySelector('.ai-preview'),null);
+    await f.click('使用起降預設');await f.click('▶ 執行積木');assert.equal(f.runner.snapshot.status,'running');assert.equal(calls,1);
   }finally{await f.close();globalThis.fetch=oldFetch;}
 });
 it('clarification and rejected or invalid JSON responses never become executable tasks',async()=>{
@@ -117,11 +120,9 @@ it('recovers ChatGPT status after an HTML fallback without clearing student inpu
 it('previews the full parallel circle and executes it as one shared-physics phase',async()=>{
   const f=await setup();try{
     await act(()=>{const select=document.querySelector('option[value="parallel-circle"]')!.parentElement as HTMLSelectElement;select.value='parallel-circle';select.dispatchEvent(new window.Event('change',{bubbles:true}));});
-    assert.equal(f.runner.plan!.commandCount,4);assert.equal(document.querySelectorAll('.mission-steps li').length,3);
-    assert.ok(document.querySelector('.mission-map polyline')!.getAttribute('points')!.split(' ').length>70);
-    assert.match(document.querySelector('.mission-steps')!.textContent!,/同時執行/);
-    await f.click('▶ 開始');await act(()=>{for(let i=0;i<21600&&f.runner.ownsControl;i++)f.runner.update(1/120);f.refresh();});
-    assert.equal(f.runner.snapshot.status,'completed');assert.equal(document.querySelectorAll('.mission-steps .done').length,3);
+    assert.equal(workspaceToMission(Blockly.getMainWorkspace()).commands[1].action,'parallel');
+    await f.click('▶ 執行積木');await act(()=>{for(let i=0;i<21600&&f.runner.ownsControl;i++)f.runner.update(1/120);f.refresh();});
+    assert.equal(f.runner.snapshot.status,'completed');assert.equal(f.runner.snapshot.completed.length,3);
   }finally{await f.close();}
 });
 

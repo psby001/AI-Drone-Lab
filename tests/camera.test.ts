@@ -1,3 +1,4 @@
+import { MISSION_LIMITS as Budget } from '../src/config/limits';
 import { it } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
@@ -50,7 +51,7 @@ it('camera commands are validated within the original finite mission budget, inc
     [{action:'set_gimbal_pitch',angle:31}],[{action:'set_gimbal_yaw',angle:-181}],[{action:'set_camera_view',view:'fake'}],
     [{action:'stop_recording'}],[{action:'start_recording'}],[{action:'start_recording'},{action:'start_recording'},{action:'stop_recording'}],
     [{action:'parallel',commands:[{action:'move_forward',distance:1},{action:'capture_photo'}]}],
-    [{action:'repeat',count:4,commands:[{action:'capture_photo'},{action:'capture_photo'},{action:'capture_photo'},{action:'capture_photo'}]}],
+    [{action:'repeat',count:4,commands:Array(Math.floor((Budget.maxCommands-2)/4)+1).fill({action:'capture_photo'})}],
   ])assert.ok(validateMission(wrap(commands as MissionCommand[])).errors.length,JSON.stringify(commands));
   assert.ok(validateMission({...CAMERA_PRESETS[0].mission,version:'1.1'}).errors.length);
   await assert.rejects(generatePython(CAMERA_PRESETS[0].mission),/尚未提供對應/);

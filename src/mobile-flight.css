@@ -169,3 +169,16 @@
   .flight-panel-fit { display: contents; }
   .manual-app .flight-panel-fit > .panel-heading { display: none; }
 }
+
+.blockly-mission-panel { width: min(850px, calc(100vw - 32px)); }
+.blockly-workspace { position: relative; height: clamp(300px, 49dvh, 580px); width: 100%; border: 1px solid #afc2b4; border-radius: 8px; overflow: hidden; background: #f7faf3; }
+.blockly-workspace[inert] { pointer-events: none; opacity: .75; }
+.blockly-editor .mission-files { flex-wrap: wrap; }
+.blocklyDropDownDiv, .blocklyWidgetDiv, .blocklyTooltipDiv { z-index: 150 !important; }
+@media (max-width:700px), (max-height:600px) and (max-width:1100px) {
+  .manual-app .blockly-mission-panel { top: 80px; right: 8px; left: 8px; width: auto; max-height: calc(100dvh - 90px); }
+  .blockly-workspace { height: 50dvh; min-height: 240px; }
+}
+@media (orientation:landscape) and (max-height:600px) and (max-width:1100px) {
+  .manual-app .blockly-mission-panel { top: 48px; max-height: calc(100dvh - 56px); }
+}

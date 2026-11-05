@@ -1,3 +1,4 @@
+import { MISSION_LIMITS as Budget } from '../src/config/limits';
 import { it } from 'node:test';
 import assert from 'node:assert/strict';
 import Ajv from 'ajv';
@@ -54,7 +55,7 @@ it('returns clarification without producing a flyable mission',async()=>{
 });
 it('rejects unsafe AI routes, oversized repeat expansion and unsupported actions',()=>{
   const unsafe=[{...exampleMission,commands:[{action:'takeoff',altitude:21},{action:'land'}]},
-    {commands:[{action:'takeoff',altitude:3},{action:'repeat',count:4,commands:Array(4).fill({action:'hover',duration:1})},{action:'land'}]}];
+    {commands:[{action:'takeoff',altitude:3},{action:'repeat',count:4,commands:Array(Math.floor((Budget.maxCommands-2)/4)+1).fill({action:'hover',duration:1})},{action:'land'}]}];
   for(const mission of unsafe)assert.throws(()=>validateAiOutput(ready(mission as any)),fails('INVALID_MISSION'));
   const invalid=ready();(invalid.mission as any).commands[1].action='execute_python';
   assert.throws(()=>validateAiOutput(invalid),fails('INVALID_OUTPUT'));

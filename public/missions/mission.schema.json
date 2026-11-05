@@ -43,7 +43,7 @@
     "commands": {
       "type": "array",
       "minItems": 1,
-      "maxItems": 15,
+      "maxItems": 100,
       "items": {
         "$ref": "#/definitions/command"
       }
@@ -718,7 +718,7 @@
             "commands": {
               "type": "array",
               "minItems": 1,
-              "maxItems": 15,
+              "maxItems": 100,
               "items": {
                 "$ref": "#/definitions/command"
               }

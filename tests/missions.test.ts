@@ -29,7 +29,7 @@ describe('mission schema and semantics',()=>{
       {commands:[{action:'takeoff',altitude:5},{action:'move_forward',distance:51},{action:'land'}]},
       {commands:[{action:'takeoff',altitude:5},{action:'move_forward',distance:2,speed:6},{action:'land'}]},
       {commands:[{action:'takeoff',altitude:5},{action:'repeat',count:999,commands:[{action:'hover',duration:1}]},{action:'land'}]},
-      {commands:[{action:'takeoff',altitude:5},{action:'repeat',count:4,commands:Array(4).fill({action:'hover',duration:1})},{action:'land'}]},
+      {commands:[{action:'takeoff',altitude:5},{action:'repeat',count:4,commands:Array(Math.floor((M.maxCommands-2)/4)+1).fill({action:'hover',duration:1})},{action:'land'}]},
       {commands:[{action:'takeoff',altitude:5},{action:'move_forward',distance:10,speed:0.01},{action:'land'}]},
     ];
     for(const data of invalid) assert.ok(validateMission(data).errors.length,JSON.stringify(data));

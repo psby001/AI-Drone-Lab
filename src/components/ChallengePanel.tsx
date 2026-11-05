@@ -33,7 +33,7 @@ export function ChallengePanel({manager,open,onOpen,onClose,onExample,onTakeover
           {running&&<button onClick={()=>s.status==='PAUSED'?manager.resume():manager.pause()}>{s.status==='PAUSED'?'繼續':'暫停'}</button>}
           {running&&<button onClick={()=>manager.abort()}>中止挑戰</button>}
           {canTakeover&&s.status==='RUNNING'&&<button onClick={onTakeover}>手動接管（繼續本次挑戰）</button>}
-          {!!s.definition?.metadata.example_mission&&<button disabled={!['READY','RUNNING'].includes(s.status)} onClick={()=>onExample(s.definition!.metadata.example_mission)}>載入示範 JSON 任務</button>}
+          {!!s.definition?.metadata.example_mission&&<button disabled={!['READY','RUNNING'].includes(s.status)} onClick={()=>onExample(s.definition!.metadata.example_mission)}>載入示範積木任務</button>}
           {['COMPLETED','FAILED','ABORTED'].includes(s.status)&&<button onClick={()=>action(()=>manager.retry())}>重新挑戰</button>}
           {hunt&&['READY','COMPLETED','FAILED','ABORTED'].includes(s.status)&&<button onClick={()=>action(()=>manager.retry(crypto.getRandomValues(new Uint32Array(1))[0]))}>新 Seed 重新配置</button>}
           <button onClick={()=>manager.menu()}>返回主選單／自由飛行</button>

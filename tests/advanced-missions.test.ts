@@ -1,3 +1,4 @@
+import { MISSION_LIMITS as Budget } from '../src/config/limits';
 import { it } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateMission } from '../src/missions/validate';
@@ -51,14 +52,15 @@ it('uses an explicit GPS home and validates GPS destinations against the flight 
   assert.equal(result.plan!.steps[1].target.north,3);assert.equal(result.plan!.steps[1].target.up,4);
   assert.ok(validateMission({home:{latitude:0,longitude:0},commands:[takeoff,{action:'goto_gps',latitude:0,longitude:0.001,altitude:4},land]}).errors.length);
 });
-it('expands waypoints and all six RTL stages into the shared 15-step budget',()=>{
+it('expands waypoints and all six RTL stages into the configured shared command budget',()=>{
   const points=Array.from({length:8},(_,i)=>({x:i%2,y:1,z:3}));
-  const valid=compile([takeoff,{action:'follow_waypoints',frame:'local',waypoints:points},{action:'return_to_launch'}]);
-  assert.equal(valid.steps.length,15);assert.equal(valid.steps.filter(s=>s.label?.startsWith('返航')).length,6);
-  assert.ok(validateMission({commands:[takeoff,{action:'follow_waypoints',frame:'local',waypoints:[...points,points[0]]},{action:'return_to_launch'}]}).errors.length);
+  const padding=Array(Math.max(0,Budget.maxCommands-15)).fill({action:'set_speed',speed:2});
+  const valid=compile([takeoff,...padding,{action:'follow_waypoints',frame:'local',waypoints:points},{action:'return_to_launch'}]);
+  assert.equal(valid.steps.length,Budget.maxCommands);assert.equal(valid.steps.filter(s=>s.label?.startsWith('返航')).length,6);
+  assert.ok(validateMission({commands:[takeoff,...padding,{action:'follow_waypoints',frame:'local',waypoints:[...points,points[0]]},{action:'return_to_launch'}]}).errors.length);
   assert.ok(validateMission({commands:[takeoff,{action:'follow_waypoints',frame:'local',waypoints:[]},land]}).errors.length);
   assert.ok(validateMission({commands:[takeoff,{action:'follow_waypoints',frame:'local',waypoints:Array(11).fill(points[0])},land]}).errors.length);
-  assert.ok(validateMission({commands:[takeoff,{action:'repeat',count:4,commands:[{action:'follow_waypoints',frame:'local',waypoints:points}]},land]}).errors.length);
+  assert.ok(validateMission({commands:[takeoff,{action:'repeat',count:4,commands:Array(Math.floor((Budget.maxCommands-2)/32)+1).fill({action:'follow_waypoints',frame:'local',waypoints:points})},land]}).errors.length);
 });
 it('RTL never descends before returning and restores the actual launch pose',()=>{
   const p=compile([{action:'takeoff',altitude:8},{action:'goto_local',x:4,y:5,z:8},

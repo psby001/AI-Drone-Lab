@@ -17,7 +17,7 @@ it('challenge menu loads, counts down, pauses, displays settlement, retries and 
   try{
     await act(render);assert.equal(document.querySelectorAll('.challenge-cards button').length,2);
     await act(async()=>{document.querySelector<HTMLButtonElement>('.challenge-cards button')!.click();});assert.match(document.body.textContent!,/準備就緒/);
-    await click('載入示範 JSON 任務');assert.equal(examples,1);await click('開始挑戰（3 秒倒數）');assert.ok(document.querySelector('.challenge-hud'));
+    await click('載入示範積木任務');assert.equal(examples,1);await click('開始挑戰（3 秒倒數）');assert.ok(document.querySelector('.challenge-hud'));
     const disclosure=()=>document.querySelector<HTMLButtonElement>('[aria-controls="challenge-hud-details"]')!;
     assert.equal(disclosure().getAttribute('aria-expanded'),'false');
     await act(()=>disclosure().click());assert.equal(disclosure().getAttribute('aria-expanded'),'true');assert.ok(document.querySelector('.challenge-hud.hud-expanded'));

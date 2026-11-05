@@ -16,7 +16,8 @@ import { GamepadPicker,GamepadStatusBadge,PAD_STATUS } from './components/Gamepa
 import { PageFullscreenButton } from './components/PageFullscreenButton';
 import { MissionRunner } from './missions/MissionRunner';
 import { PRESETS } from './missions/presets';
-import { MissionPanel, MISSION_STATUS, stepLabel } from './components/MissionPanel';
+import { MISSION_STATUS } from './missions/status';
+import { stepLabel } from './missions/labels';
 import './style.css';
 import './mobile-flight.css';
 import { CameraController } from './camera/CameraController';
@@ -35,6 +36,7 @@ import type { EnvironmentSettings } from './core/environment';
 
 const emptyFree:FreeSceneSnapshot={status:'UNLOADED',active:null,requested:null,error:'',paused:false};
 const noFreeSubscribe=()=>()=>{};const emptyFreeSnapshot=()=>emptyFree;
+const MissionPanel=React.lazy(()=>import('./components/MissionPanel').then(module=>({default:module.MissionPanel})));
 const modes = { grounded: 'Disarmed', armed: 'Armed・待起飛', flying: '飛行中', landing: '自動降落' };
 const controlModes = { position: '定位模式', attitude: '姿態模式' };
 const isEditable = (target: EventTarget | null) => target instanceof HTMLElement &&
@@ -183,8 +185,8 @@ function App() {
       <div className="controller-tools"><InterfaceLayoutButton onBeforeChange={()=>{controller.current.clear();gamepads.controller.current.suspend();}}/><PageFullscreenButton/><button className="help-button ai-entry" aria-expanded={missionOpen&&aiOpen} aria-controls="mission-panel" onClick={()=>{controller.current.clear();gamepads.controller.current.suspend();setChallengeOpen(false);setAiOpen(true);setMissionOpen(true);}}>✦ AI 編程</button><button className="help-button" aria-expanded={missionOpen} aria-controls="mission-panel" onClick={()=>{controller.current.clear();gamepads.controller.current.suspend();setChallengeOpen(false);setAiOpen(false);setMissionOpen(!missionOpen);}}>任務</button><button ref={deviceButton} className={'help-button '+(physical?'selected-device':'')} onClick={toggleDeviceSettings} title={PAD_STATUS[gamepads.snapshot.status]} aria-label={`${physical?'實體手把':'控制裝置'}，${PAD_STATUS[gamepads.snapshot.status]}`} aria-expanded={deviceSettings} aria-controls="gamepad-settings">🎮 {physical ? '實體手把' : '控制裝置'}<GamepadStatusBadge status={gamepads.snapshot.status}/></button><button ref={helpButton} className="help-button" onClick={toggleHelp} aria-expanded={help} aria-controls="flight-help">? 操作說明</button></div>
     </header>
     <main inert={help}>
-      {!help&&!deviceSettings&&<ChallengePanel telemetry={{altitude:state.position.up,speed,heading:state.heading}} photoAlbum={photoAlbum} onPhoto={async()=>{if(!payloadProvider||challengeManager.snapshot.status!=='RUNNING')return;return payloadProvider.capturePhoto();}} canTakeover={missionRunner.ownsControl} onTakeover={()=>{if(challengeManager.snapshot.status!=='RUNNING')return;controller.current.clear();gamepads.controller.current.suspend();missionRunner.stop();setMissionSnapshot(structuredClone(missionRunner.snapshot));}} manager={challengeManager} open={challengeOpen} onOpen={()=>{setMissionOpen(false);setChallengeOpen(true);}} onClose={()=>setChallengeOpen(false)} onExample={value=>{missionRunner.load(value);setMissionSnapshot(structuredClone(missionRunner.snapshot));if(challengeManager.snapshot.status==='RUNNING'){setChallengeOpen(false);setMissionOpen(true);}}}/>}
-      {missionOpen&&<MissionPanel publicContext={publicHuntContext(challengeSnapshot.definition)} blocked={!!error||challengeManager.freezesFlight} runner={missionRunner} snapshot={missionSnapshot} onAction={missionAction} onReset={reset} onClose={()=>setMissionOpen(false)} aiOpen={aiOpen} onAiOpen={setAiOpen} aiPrompt={aiPrompt} onAiPrompt={setAiPrompt}/>}
+      {!help&&!deviceSettings&&<ChallengePanel telemetry={{altitude:state.position.up,speed,heading:state.heading}} photoAlbum={photoAlbum} onPhoto={async()=>{if(!payloadProvider||challengeManager.snapshot.status!=='RUNNING')return;return payloadProvider.capturePhoto();}} canTakeover={missionRunner.ownsControl} onTakeover={()=>{if(challengeManager.snapshot.status!=='RUNNING')return;controller.current.clear();gamepads.controller.current.suspend();missionRunner.stop();setMissionSnapshot(structuredClone(missionRunner.snapshot));}} manager={challengeManager} open={challengeOpen} onOpen={()=>{setMissionOpen(false);setChallengeOpen(true);}} onClose={()=>setChallengeOpen(false)} onExample={value=>{missionRunner.load(value);setMissionSnapshot(structuredClone(missionRunner.snapshot));setChallengeOpen(false);setMissionOpen(true);}}/>}
+      {missionOpen&&<React.Suspense fallback={<div className="mission-panel" role="status">載入積木編輯器…</div>}><MissionPanel publicContext={publicHuntContext(challengeSnapshot.definition)} blocked={!!error||challengeManager.freezesFlight} runner={missionRunner} snapshot={missionSnapshot} onAction={missionAction} onReset={reset} onClose={()=>setMissionOpen(false)} aiOpen={aiOpen} onAiOpen={setAiOpen} aiPrompt={aiPrompt} onAiPrompt={setAiPrompt}/></React.Suspense>}
       {deviceSettings && <GamepadPicker snapshot={gamepads.snapshot} onSelect={index => { controller.current.clear(); gamepads.select(index); }} onClose={toggleDeviceSettings}/>}
       <section className="workspace">
         <DesktopPreviews scene={inspectionScene}/>

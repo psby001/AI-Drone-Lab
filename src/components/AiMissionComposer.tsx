@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AI_LIMITS as A, PROMPT_EXAMPLES, type AiResult } from '../ai/contracts';
 import { AiClientError, generateMission } from '../ai/client';
 import { validateMission } from '../missions/validate';
-import { stepLabel } from '../missions/labels';
+
 import { PRESETS } from '../missions/presets';
 import { ApiModelPicker } from './ApiModelPicker';
 import { ChatGptConnection } from './ChatGptConnection';
@@ -33,14 +33,14 @@ export function AiMissionComposer({prompt,onPromptChange,disabled,onUse,onEdit,p
     if(disabled||request.current||!prompt.trim()||prompt.length>promptLimit||(provider==='chatgpt'&&!chatGptReady))return;
     const controller=new AbortController(),id=++generation.current;
     request.current=controller;setPending(true);setResult(null);setError('');setDetails([]);
-    try{const parsed=await generateMission(publicContext?`${publicContext}\n學生任務：\n${prompt}`:prompt,controller.signal,provider==='chatgpt'?{provider,model:chatGptModel}:apiModel?{provider:'api_key',model:apiModel}:undefined);if(generation.current===id)setResult(parsed);}
+    try{const parsed=await generateMission(publicContext?`${publicContext}\n學生任務：\n${prompt}`:prompt,controller.signal,provider==='chatgpt'?{provider,model:chatGptModel}:apiModel?{provider:'api_key',model:apiModel}:undefined);if(generation.current===id){setResult(parsed);if(parsed.status==='ready')onUse(JSON.stringify(parsed.mission),false);}}
     catch(error){if(generation.current===id){setError(error instanceof Error?error.message:'AI 解析失敗，請稍後再試。');setDetails(error instanceof AiClientError?error.details:[]);}}
     finally{if(generation.current===id){request.current=null;setPending(false);}}
   };
   const plan=result?.status==='ready'?validateMission(result.mission).plan:null;
-  const json=plan?JSON.stringify(plan.mission,null,2):'';
+
   return <section className="ai-composer" aria-label="AI 中文編程">
-    <p className="ai-intro">用中文描述飛行順序，先確認 AI 步驟，再開始模擬。</p>
+    <p className="ai-intro">用中文描述飛行順序，轉成積木確認後，再開始模擬。</p>
     <label className="mission-label">AI 來源<select aria-label="AI 來源" value={provider} disabled={disabled} onChange={event=>{
       cancel();setResult(null);setError('');setDetails([]);const value=event.target.value as AiProvider;setProvider(value);try{window.sessionStorage.setItem('drone-ai-provider',value);}catch{}
     }}><option value="api_key">OpenAI API Key（後端設定）</option><option value="chatgpt">ChatGPT 方案（本機登入）</option></select></label>
@@ -57,12 +57,10 @@ export function AiMissionComposer({prompt,onPromptChange,disabled,onUse,onEdit,p
     {error&&<div role="alert" className="ai-error"><b>{error}</b>{details.length>0&&<ul>{details.map((detail,i)=><li key={i}>{detail}</li>)}</ul>}</div>}
     {result&&<div className={'ai-answer '+result.status} role="status"><b>{result.status==='ready'?'任務已通過驗證，尚未執行':result.status==='clarification'?'請補充任務內容':'此任務目前無法產生'}</b><p>{result.message}</p>{result.questions.length>0&&<ul>{result.questions.map((question,i)=><li key={i}>{question}</li>)}</ul>}</div>}
     {plan&&<div className="ai-preview">
-      <h3>AI 解析後的飛行步驟 <small>{plan.steps.length} 階段／{plan.commandCount} 指令</small></h3>
-      <ol>{plan.steps.map((step,i)=><li key={i}>{stepLabel(step)}</li>)}</ol>
-      <details><summary>查看 AI JSON 任務</summary><pre tabIndex={0}>{json}</pre></details>
-      <div className="ai-actions"><button disabled={disabled||pending} onClick={()=>onUse(json,true)}>開始模擬</button><button disabled={disabled||pending} onClick={()=>{onUse(json,false);onEdit();}}>修改任務 JSON</button></div>
+      <p>任務已轉成下方積木，請確認與修改後再執行。</p>
+      <div className="ai-actions"><button disabled={disabled||pending} onClick={()=>onUse(JSON.stringify(plan.mission),false)}>轉成積木編輯</button></div>
       <p className="mission-hint">可在上方暫停、繼續、停止或重置任務，完成後可重新執行。</p>
     </div>}
-    <div className="ai-fallback"><span>也可以不使用 AI</span><button disabled={disabled||pending} onClick={()=>{onUse(JSON.stringify(PRESETS[0].mission,null,2),false);onEdit();}}>使用起降預設</button><button disabled={disabled||pending} onClick={onEdit}>編輯任務 JSON</button></div>
+    <div className="ai-fallback"><span>也可以不使用 AI</span><button disabled={disabled||pending} onClick={()=>{onUse(JSON.stringify(PRESETS[0].mission,null,2),false);onEdit();}}>使用起降預設</button><button disabled={disabled||pending} onClick={onEdit}>編輯任務積木</button></div>
   </section>;
 }

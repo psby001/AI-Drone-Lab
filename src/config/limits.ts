@@ -1,7 +1,7 @@
 /** SI units. One source for model, scene, mission validation and execution. */
 export const LIMITS = { radius: 50, maxAltitude: 20, maxSpeed: 5, attitudeMaxSpeed: 5, verticalSpeed: 2, yawSpeed: 90, acceleration: 3 } as const;
 export const MISSION_LIMITS = {
-  maxCommands: 15, maxRepeat: 4, maxRepeatDepth: 2, maxSourceBytes: 20000,
+  maxCommands: 100, maxRepeat: 4, maxRepeatDepth: 2, maxSourceBytes: 20000,
   maxDuration: 180, commandTimeout: 60, maxHover: 30,
   defaultSpeed: 2.5, defaultVerticalSpeed: 1.2, defaultYawSpeed: 60,
   positionTolerance: 0.25, altitudeTolerance: 0.15, headingTolerance: 1,

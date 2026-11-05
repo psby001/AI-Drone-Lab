@@ -1,3 +1,4 @@
+import { MISSION_LIMITS as Budget } from '../src/config/limits';
 import { it } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateMission } from '../src/missions/validate';
@@ -47,7 +48,7 @@ it('rejects conflicting axes, unsupported lifecycle/config commands, nesting and
   const noVersion=circle();delete noVersion.version;assert.deepEqual(validateMission(noVersion).errors,[]);
 });
 it('counts child commands through repeat and rejects too many, too slow or too high',()=>{
-  assert.ok(validateMission(wrap([{action:'repeat',count:4,commands:[parallel([forward,{action:'move_right',distance:2},{action:'ascend',distance:1},turn])]}])).errors.some(e=>e.includes('15')));
+  assert.ok(validateMission(wrap([{action:'repeat',count:4,commands:Array(Math.floor((Budget.maxCommands-2)/16)+1).fill(parallel([{action:'move_forward',distance:.01},{action:'move_right',distance:.01},{action:'ascend',distance:.001},{action:'turn_right',angle:.01}]))}])).errors.some(e=>e.includes(String(Budget.maxCommands))));
   assert.ok(validateMission(wrap([parallel([{action:'move_forward',distance:20,speed:0.1},turn])])).errors.some(e=>e.includes('60')));
   assert.ok(validateMission(wrap([parallel([{action:'ascend',distance:18},turn])])).errors.length);
   assert.ok(validateMission({commands:[parallel([forward,turn]),{action:'land'}]}).errors.length);

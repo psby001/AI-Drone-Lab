@@ -24,7 +24,7 @@ export function DroneKitPanel({source,dirty=false}:{source:unknown;dirty?:boolea
       <p className="mission-hint">兩個終端機需使用相同 Python 環境。若 SITL 使用其他 TCP 埠，請調整 --connect；GPS 任務的 home 須與 SITL 起點一致。舊版 SITL 韌體可能不支援部分指令。</p>
       <p className="mission-hint">網頁僅產生程式碼，不會連線飛控。執行前請確認端點為本機 SITL；模擬測試不代表可安全實飛。</p>
     </section>
-    {dirty?<p role="status">JSON 已修改，請先「載入並驗證」再產生程式碼。</p>:error?<p role="alert">{error}</p>:!artifact?<p role="status">正在驗證任務並產生程式碼…</p>:<>
+    {dirty?<p role="status">積木已修改，請先完成任務驗證。</p>:error?<p role="alert">{error}</p>:!artifact?<p role="status">正在驗證任務並產生程式碼…</p>:<>
       <details><summary>程式碼驗證資訊</summary><ul className="code-validation"><li>任務參數與安全限制：通過</li><li>Python 模板語法：{TEMPLATE_SYNTAX.passed?`Python ${TEMPLATE_SYNTAX.python} AST 通過`:'未檢查'}</li><li>模板 API：{TEMPLATE_API.passed&&TEMPLATE_API.versions?`DroneKit ${TEMPLATE_API.versions.dronekit}／pymavlink ${TEMPLATE_API.versions.pymavlink} 套件與編碼測試通過（非 SITL）`:'未取得符合本模板的套件測試記錄'}</li><li>下載腳本：請執行 --check 檢查</li><li>SITL：尚未驗證；不可視為可安全實飛</li></ul></details>
       <div className="mission-files"><button onClick={()=>{if(!navigator.clipboard){setNotice('無法使用剪貼簿，請下載 .py');return;}void navigator.clipboard.writeText(artifact.code).then(()=>setNotice('已複製程式碼')).catch(()=>setNotice('無法使用剪貼簿，請下載 .py'));}}>複製 Python</button><button onClick={download}>下載 .py</button></div>
       <p role="status">{notice}</p>
